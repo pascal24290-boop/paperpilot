@@ -1,15 +1,28 @@
-const screens=[...document.querySelectorAll(".screen")];const nav=[...document.querySelectorAll(".nav-item")];const fileInput=document.getElementById("fileInput");let autoSpeak=false;
-function go(id){screens.forEach(s=>s.classList.toggle("active",s.id===id));nav.forEach(n=>n.classList.toggle("active",n.dataset.go===id));window.scrollTo(0,0)}
-document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
-function startAnalysis(){go("analysis");setTimeout(()=>{go("result");if(autoSpeak)speakSummary()},1600)}
-["scanBtn","cameraBtn","galleryBtn","fileBtn"].forEach(id=>document.getElementById(id).addEventListener("click",()=>fileInput.click()));
-fileInput.addEventListener("change",()=>{if(fileInput.files.length)startAnalysis()});
-function speakSummary(){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible sur ce navigateur.");return}const text="Il s'agit de votre contrat d'assurance habitation. Il arrive à échéance le quinze octobre deux mille vingt-six et semble être renouvelé automatiquement. Vous devez vérifier le nouveau tarif et les garanties.";speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(text))}
-document.getElementById("speakBtn").addEventListener("click",speakSummary);
-document.getElementById("saveBtn").addEventListener("click",()=>{localStorage.setItem("paperpilotSaved","1");document.getElementById("saveBtn").textContent="✓ Enregistré";renderDocs()});
-function renderDocs(){const el=document.getElementById("documentList");el.innerHTML=localStorage.getItem("paperpilotSaved")?'<div class="doc-row"><span>🏠</span><div><strong>Contrat d’assurance habitation</strong><div class="small">Échéance : 15 octobre 2026</div></div></div>':'<div class="note">Aucun document enregistré pour le moment.</div>'}
-renderDocs();
-document.getElementById("largeText").addEventListener("click",()=>document.documentElement.classList.toggle("large-text"));
-document.getElementById("contrast").addEventListener("click",()=>document.body.classList.toggle("high-contrast"));
-document.getElementById("autoSpeak").addEventListener("click",e=>{autoSpeak=!autoSpeak;e.currentTarget.textContent=autoSpeak?"✓ Lecture automatique activée":"🔊 Lecture automatique du résultat"});
-document.getElementById("accessibilityBtn").addEventListener("click",()=>go("profile"));
+const $=id=>document.getElementById(id);let data={text:"",dates:[],amounts:[],actions:[],kind:"Document"};
+function show(id){["home","loading","result","profile"].forEach(x=>$(x).hidden=x!==id)}
+$("camera").onclick=()=>$("file").click();$("gallery").onclick=()=>$("file").click();$("back").onclick=()=>show("home");$("backLoad").onclick=()=>show("home");
+$("settings").onclick=()=>show("profile");$("large").onclick=()=>document.documentElement.classList.toggle("largeText");$("contrast").onclick=()=>document.body.classList.toggle("contrast");
+$("speakTest").onclick=()=>speak("Bienvenue dans PaperPilot. Votre assistant pour comprendre vos documents.");
+$("file").onchange=e=>{if(e.target.files[0])analyze(e.target.files[0])};
+async function analyze(file){show("loading");$("bar").style.width="10%";$("status").textContent="Lecture du document…";try{
+let r=await Tesseract.recognize(file,"fra+eng",{logger:m=>{if(m.status==="recognizing text"){let n=20+Math.round(m.progress*70);$("bar").style.width=n+"%";$("status").textContent="Reconnaissance du texte : "+n+"%"}}});
+data.text=(r.data.text||"").trim();interpret();$("bar").style.width="100%";setTimeout(()=>show("result"),300)
+}catch(e){data.text="La lecture a échoué. Essayez une photo nette et bien éclairée.";interpret();show("result")}}
+function interpret(){let t=data.text,l=t.toLowerCase();data.dates=[];data.amounts=[];data.actions=[];
+let m,re=/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/g;while((m=re.exec(t)))data.dates.push(m[0]);
+re=/\b(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(20\d{2})\b/gi;while((m=re.exec(t)))data.dates.push(m[0]);
+re=/\b\d{1,5}(?:[ .]\d{3})*(?:,\d{2})?\s*(?:€|euros?)\b/gi;while((m=re.exec(t)))data.amounts.push(m[0]);
+if(/assurance/.test(l))data.kind="Document d’assurance";else if(/facture|montant à payer|total à payer/.test(l))data.kind="Facture";else if(/impôt|impots|fiscal|taxe/.test(l))data.kind="Document fiscal";else if(/contrat/.test(l))data.kind="Contrat";else if(/banque|relevé bancaire/.test(l))data.kind="Document bancaire";else if(/courrier|madame|monsieur/.test(l))data.kind="Courrier";
+if(/payer|paiement|régler|regler/.test(l))data.actions.push("Vérifier le montant et la date limite de paiement.");
+if(/échéance|echeance|renouvellement|renouvelé|renouvele/.test(l))data.actions.push("Vérifier l’échéance et les conditions de renouvellement.");
+if(/signature|signer/.test(l))data.actions.push("Vérifier les informations avant de signer.");
+if(/répondre|réponse|reponse|délai|delai/.test(l))data.actions.push("Vérifier s’il faut répondre dans le délai indiqué.");
+if(!data.actions.length)data.actions.push("Relire les informations importantes et vérifier les dates détectées.");
+$("title").textContent=data.kind;$("kind").textContent=`Ce document ressemble à : ${data.kind}.`;
+$("summary").textContent=t?`PaperPilot a reconnu le document. Il contient ${data.dates.length} date(s) et ${data.amounts.length} montant(s). Consultez les rubriques ci-dessous pour les éléments à vérifier.`:"Aucun texte exploitable n’a été reconnu.";
+$("dates").innerHTML=data.dates.length?data.dates.map(x=>`<div class="date">📅 ${x}</div>`).join(""):"Aucune date détectée.";
+$("amounts").innerHTML=data.amounts.length?data.amounts.map(x=>`<div class="amount">💶 ${x}</div>`).join(""):"Aucun montant détecté.";
+$("actions").innerHTML=data.actions.map(x=>`<div class="action">☐ ${x}</div>`).join("");$("raw").textContent=t||"Aucun texte reconnu."}
+function speak(s){if("speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(s))}}
+$("listen").onclick=()=>speak(`${data.kind}. ${$("summary").textContent}. Dates : ${data.dates.join(", ")||"aucune"}. Montants : ${data.amounts.join(", ")||"aucun"}. À vérifier : ${data.actions.join(" ")}`);
+$("save").onclick=()=>{localStorage.setItem("paperpilotLast",JSON.stringify(data));$("save").textContent="✓ Enregistré"};
