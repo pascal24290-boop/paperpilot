@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#5b4bff">
+  <meta name="description" content="PaperPilot — Comprendre ses documents simplement.">
+  <title>PaperPilot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app" aria-label="PaperPilot">
+    <header class="topbar">
+      <div class="brand" aria-label="PaperPilot">
+        <div class="logo" aria-hidden="true">▤</div>
+        <span>Paper<span>Pilot</span></span>
+      </div>
+      <button class="icon-btn" id="accessibilityBtn" aria-label="Ouvrir les réglages d’accessibilité">⚙️</button>
+    </header>
+
+    <section id="home" class="screen active">
+      <div class="hero">
+        <p class="eyebrow">VOTRE ASSISTANT DOCUMENTAIRE</p>
+        <h1>Comprenez vos documents<br>en quelques secondes.</h1>
+        <p class="intro">Contrats, factures, courriers… PaperPilot vous explique l’essentiel et vous indique quoi faire.</p>
+      </div>
+
+      <button class="primary scan-trigger" id="scanBtn">
+        <span class="big-icon" aria-hidden="true">＋</span>
+        <span>Ajouter un document</span>
+      </button>
+
+      <div class="quick-actions">
+        <button class="quick" id="cameraBtn"><span>📷</span><strong>Prendre<br>une photo</strong></button>
+        <button class="quick" id="galleryBtn"><span>🖼️</span><strong>Choisir<br>une photo</strong></button>
+        <button class="quick" id="fileBtn"><span>📄</span><strong>Importer<br>un PDF</strong></button>
+      </div>
+
+      <div class="access-card">
+        <span class="access-icon">🔊</span>
+        <div>
+          <strong>Accessible à tous</strong>
+          <p>Écoutez les résultats à voix haute et utilisez de grands boutons faciles à repérer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="analysis" class="screen" aria-live="polite">
+      <button class="back" data-go="home">‹ Retour</button>
+      <div class="analysis-wrap">
+        <div class="spinner" aria-hidden="true"><div>📄</div></div>
+        <h2>Analyse en cours…</h2>
+        <p>PaperPilot lit votre document et recherche les informations importantes.</p>
+        <div class="steps">
+          <div>✓ Lecture du document</div>
+          <div>✓ Analyse du contenu</div>
+          <div>✓ Recherche des dates</div>
+          <div>✓ Préparation du résumé</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <button class="back" data-go="home">‹ Accueil</button>
+      <div class="result-card">
+        <div class="result-head"><span class="doc-icon">🏠</span><div><span class="tag">DOCUMENT ANALYSÉ</span><h2>Contrat d’assurance habitation</h2><p>Exemple de résultat PaperPilot</p></div></div>
+        <div class="info-block">
+          <h3>📋 Résumé</h3>
+          <p>Votre contrat d’assurance habitation arrive à échéance le <strong>15 octobre 2026</strong> et semble être renouvelé automatiquement.</p>
+        </div>
+        <div class="info-block date"><h3>📅 Date importante</h3><strong>15 octobre 2026</strong><p>Échéance du contrat</p></div>
+        <div class="info-block todo">
+          <h3>⚠️ À faire</h3>
+          <label><input type="checkbox"> Vérifier le nouveau tarif</label>
+          <label><input type="checkbox"> Vérifier les garanties</label>
+          <label><input type="checkbox"> Décider si vous souhaitez conserver le contrat</label>
+        </div>
+        <div class="button-row">
+          <button class="primary" id="speakBtn">🔊 Écouter le résumé</button>
+          <button class="secondary" id="saveBtn">💾 Enregistrer</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="documents" class="screen">
+      <h2>Mes documents</h2>
+      <p class="muted">Vos documents importants au même endroit.</p>
+      <div id="documentList" class="document-list"></div>
+    </section>
+
+    <section id="reminders" class="screen">
+      <h2>Mes rappels</h2>
+      <p class="muted">Les prochaines échéances.</p>
+      <div class="reminder">📅 <div><strong>15 octobre 2026</strong><span>Assurance habitation</span></div></div>
+      <div class="reminder">📅 <div><strong>25 septembre 2026</strong><span>Facture d’électricité</span></div></div>
+    </section>
+
+    <section id="profile" class="screen">
+      <h2>Accessibilité</h2>
+      <div class="settings">
+        <button id="largeText">🔎 Augmenter la taille du texte</button>
+        <button id="contrast">◐ Activer le contraste renforcé</button>
+        <button id="autoSpeak">🔊 Lecture automatique du résultat</button>
+      </div>
+      <div class="note">PaperPilot est conçu pour fonctionner avec VoiceOver sur iPhone et TalkBack sur Android.</div>
+    </section>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <button class="nav-item active" data-go="home">⌂<span>Accueil</span></button>
+      <button class="nav-item" data-go="documents">▣<span>Documents</span></button>
+      <button class="nav-item" data-go="reminders">♧<span>Rappels</span></button>
+      <button class="nav-item" data-go="profile">◉<span>Profil</span></button>
+    </nav>
+
+    <input id="fileInput" type="file" accept="image/*,.pdf,application/pdf" hidden>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
