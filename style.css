@@ -49,3 +49,7 @@ body.highContrast .importantBox{background:#000;color:#fff;border-color:#fff}
 body.highContrast .stat{background:#000;color:#fff;border-color:#fff}
 body.highContrast .status{background:#000;color:#fff;border:1px solid #fff}
 @media(max-width:420px){.statsGrid{grid-template-columns:1fr 1fr}}
+
+:focus-visible{outline:4px solid #2563eb;outline-offset:3px}
+button,label{touch-action:manipulation}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}

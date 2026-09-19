@@ -5,6 +5,17 @@ function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
 $("openAccess").onclick=()=>showScreen("access");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
 function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
+function guidedText(){
+  if(!lastResult) return "Aucun document n’est actuellement analysé.";
+  const type=lastResult.type.replace(/^.\s/,"");
+  const amount=lastResult.amountsToPay?.length?`Montant à payer : ${lastResult.amountsToPay.join(", ")}.`:"Aucun montant à payer clairement détecté.";
+  const date=lastResult.dates?.length?`Dates détectées : ${lastResult.dates.join(", ")}.`:"Aucune date détectée.";
+  const action=lastResult.actions?.length?`Action à vérifier : ${lastResult.actions.join(" ")}.`:"Aucune action détectée.";
+  return `Lecture guidée. Type de document : ${type}. ${amount} ${date} ${action} Explication : ${lastResult.plain}`;
+}
+$("guidedRead").onclick=()=>speak(guidedText());
+$("quickRead").onclick=()=>speak("PaperPilot. " + (lastResult ? guidedText() : "Analysez un document pour pouvoir écouter son contenu."));
+
 $("speakWelcome").onclick=()=>speak("Bienvenue dans PaperPilot. Choisissez une image pour analyser un document.");
 $("voiceTest").onclick=()=>speak("La lecture vocale de PaperPilot fonctionne.");
 function setProgress(n,msg){$("progressBar").style.width=n+"%";$("progressText").textContent=msg}
@@ -107,7 +118,7 @@ if(importantDates.length) important.push("Une date semble liée à une échéanc
 if(amountInfo.pay.length) important.push("Un montant semble correspondre à une somme à payer : "+amountInfo.pay[0]+".");
 important.push(actions[0]);
 lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,amountsToPay:amountInfo.pay,actions,important,text};
-$("resultTitle").textContent=type;$("plainSummary").textContent=lastResult.plain;
+$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;
 $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
 $("importantBlock").innerHTML=`<div class="importantBox"><strong>⚠️ Points importants</strong><ul>${important.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
 $("datesBlock").innerHTML=block("📅 Dates",dates);
