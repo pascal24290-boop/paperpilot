@@ -1,9 +1,9 @@
 const $=id=>document.getElementById(id);
 let lastResult=null,lastAnswer="";
-const screens=["home","loading","result","saved","access"];
+const screens=["home","loading","result","saved","privacy","access"];
 function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===name));window.scrollTo({top:0,behavior:"smooth"});if(name==="saved")renderSaved();}
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
-$("openAccess").onclick=()=>showScreen("access");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
+$("openAccess").onclick=()=>showScreen("access");$("openPrivacy").onclick=()=>showScreen("privacy");$("backFromPrivacy").onclick=()=>showScreen("home");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
 function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
 function guidedText(){
   if(!lastResult) return "Aucun document n’est actuellement analysé.";
@@ -112,13 +112,24 @@ if(SpeechRecognition){
 }
 
 
+
+function confidenceMessage(text,dates,amounts,actions){
+  let score=0;
+  if(text.length>80) score++;
+  if(dates.length) score++;
+  if(amounts.length) score++;
+  if(actions.length) score++;
+  if(score>=3) return "Plusieurs éléments ont été détectés. Vérifiez néanmoins les informations sur le document original.";
+  if(score===2) return "Quelques éléments ont été détectés, mais la lecture automatique reste partielle. Vérifiez le document original.";
+  return "La lecture automatique est limitée. Vérifiez attentivement le document original.";
+}
 async function analyze(file){showScreen("loading");setProgress(8,"Préparation de la lecture…");try{if(!window.Tesseract)throw new Error("Le moteur OCR n’a pas pu être chargé. Vérifiez votre connexion internet.");const result=await Tesseract.recognize(file,"fra+eng",{logger:m=>{if(m.status==="recognizing text")setProgress(10+Math.round((m.progress||0)*75),"Lecture du document…")}});setProgress(90,"Compréhension des éléments importants…");const text=(result.data.text||"").trim();if(!text)throw new Error("Aucun texte lisible n’a été détecté. Essayez une photo plus nette et bien éclairée.");const type=detectType(text),dates=extractDates(text),amountInfo=classifyAmounts(text),amounts=[...new Set([...amountInfo.pay,...amountInfo.other])],actions=detectActions(text),importantDates=findImportantDates(text);
 const important=[];
 if(importantDates.length) important.push("Une date semble liée à une échéance ou à une action : "+importantDates[0].date+".");
 if(amountInfo.pay.length) important.push("Un montant semble correspondre à une somme à payer : "+amountInfo.pay[0]+".");
 important.push(actions[0]);
 lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,amountsToPay:amountInfo.pay,actions,important,text};
-$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;
+$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);
 $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
 $("importantBlock").innerHTML=`<div class="importantBox"><strong>⚠️ Points importants</strong><ul>${important.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
 $("datesBlock").innerHTML=block("📅 Dates",dates);
@@ -129,7 +140,7 @@ $("rawText").textContent=text;$("assistantAnswer").textContent="Choisissez une q
 $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)analyze(f);e.target.value=""});
 $("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));$("stopSpeech").onclick=()=>speechSynthesis.cancel();
 $("saveResult").onclick=()=>{if(!lastResult)return;const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");a.unshift(lastResult);localStorage.setItem("paperpilot-docs",JSON.stringify(a.slice(0,30)));alert("Document enregistré sur cet appareil.")};
-function renderSaved(){
+function deleteLocalData(){localStorage.removeItem("paperpilot-docs");alert("Les documents et résultats locaux ont été supprimés.");renderSaved();}function renderSaved(){
   const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");
   const stats=$("dashboardStats"), due=$("dueList"), money=$("moneyList"), box=$("savedList");
   const dates=a.flatMap(d=>d.dates||[]), moneyVals=a.flatMap(d=>d.amountsToPay||d.amounts||[]);
@@ -144,7 +155,7 @@ function renderSaved(){
   money.innerHTML=a.slice(0,10).flatMap(d=>(d.amountsToPay?.length?d.amountsToPay:(d.amounts||[])).map(amount=>`<div class="dashItem"><strong>${escapeHtml(amount)}</strong><span class="status warn">Montant</span><br><small>${escapeHtml(d.type||"Document")}</small></div>`)).join("")||"<p>Aucun montant détecté.</p>";
   box.innerHTML=a.map(d=>`<div class="card"><h2>${escapeHtml(d.type||"Document")}</h2><p>${escapeHtml(d.plain||"")}</p><small>Enregistré le ${new Date(d.savedAt||d.id).toLocaleString("fr-FR")}</small></div>`).join("");
 }
-$("clearSaved").onclick=()=>{if(confirm("Supprimer les documents enregistrés sur cet appareil ?")){localStorage.removeItem("paperpilot-docs");renderSaved()}};
+$("clearSaved").onclick=()=>{if(confirm("Supprimer les documents enregistrés sur cet appareil ?"))deleteLocalData();};$("privacyDelete").onclick=()=>{if(confirm("Supprimer toutes les données locales de PaperPilot ?"))deleteLocalData();};
 $("prepareReminder").onclick=()=>{
   if(!lastResult)return;
   const m=(lastResult.important||[]).join(" ").match(/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\b/);

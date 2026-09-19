@@ -33,6 +33,7 @@
     <h2>♿ Accessibilité</h2>
     <p>Texte agrandi, contraste renforcé et lecture automatique.</p>
     <button id="openAccess" class="outlineBtn">Ouvrir les réglages</button>
+    <button id="openPrivacy" class="outlineBtn">🔐 Confidentialité</button>
   </div>
   <button id="quickRead" class="bigBtn secondary">🔊 Lecture rapide</button>
 
@@ -73,6 +74,10 @@
     <button id="speakAnswer" class="outlineBtn">🔊 Écouter la réponse</button>
   </div>
 
+  <div class="card confidenceCard">
+    <h2>⚠️ Fiabilité</h2>
+    <p id="confidenceText">PaperPilot vérifie automatiquement certains éléments, mais une lecture humaine du document original reste recommandée.</p>
+  </div>
   <div class="card">
     <h2>📄 Ce que j’ai trouvé</h2>
     <p id="docType"></p>
@@ -112,7 +117,26 @@
     <h2>📁 Mes documents</h2>
     <div id="savedList"></div>
   </div>
-  <button id="clearSaved" class="outlineBtn">Supprimer les enregistrements locaux</button>
+  <button id="clearSaved" class="outlineBtn">🗑️ Supprimer tous les documents</button>
+</section>
+
+<section id="privacy" class="screen" aria-labelledby="privacyTitle">
+  <button id="backFromPrivacy" class="backBtn">← Retour</button>
+  <h1 id="privacyTitle">Confidentialité</h1>
+  <div class="card">
+    <h2>🔐 Où sont vos documents ?</h2>
+    <p>Dans cette version, les documents et résultats enregistrés restent dans le stockage local de ce navigateur.</p>
+    <p>Ils ne sont pas envoyés à un service d’IA externe par PaperPilot V11.</p>
+  </div>
+  <div class="card">
+    <h2>🗑️ Supprimer mes données</h2>
+    <p>Vous pouvez supprimer les résultats enregistrés sur cet appareil à tout moment.</p>
+    <button id="privacyDelete" class="bigBtn">Supprimer mes données locales</button>
+  </div>
+  <div class="notice">
+    <strong>Important</strong>
+    <p>Pour les tests, évitez de photographier des documents très sensibles. Cette version est un prototype et ne remplace pas les mesures de sécurité d’une application finale.</p>
+  </div>
 </section>
 
 <section id="access" class="screen" aria-labelledby="accessTitle">

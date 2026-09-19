@@ -53,3 +53,5 @@ body.highContrast .status{background:#000;color:#fff;border:1px solid #fff}
 :focus-visible{outline:4px solid #2563eb;outline-offset:3px}
 button,label{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+.confidenceCard{border-left:6px solid #7a5b00}
