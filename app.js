@@ -462,6 +462,57 @@ function renderReminders(){
     <button class="dangerBtn" onclick="deleteReminder(${r.id})">🗑️ Supprimer</button>
   </article>`).join("");
 }
+
+function buildDashboardOverview(){
+  const docs=loadSavedDocs();
+  const reminders=loadReminders();
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=reminders.filter(r=>r.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const amounts=docs.flatMap(d=>d.amountsToPay||[]);
+  const checks=docs.filter(d=>/vérif|attention|original/i.test((d.plain||"")+" "+(d.explanation||"")));
+  return {docs,reminders,upcoming,amounts,checks};
+}
+function renderDashboardOverview(){
+  const box=$("dashboardCards");
+  if(!box) return;
+  const d=buildDashboardOverview();
+  const next=d.upcoming.slice(0,3);
+  const recent=d.docs.slice(-3).reverse();
+  box.innerHTML=`
+    <article class="dashboardTile">
+      <h2>📄 Documents</h2>
+      <p class="dashboardNumber">${d.docs.length}</p>
+      <p>document${d.docs.length>1?"s":""} enregistré${d.docs.length>1?"s":""}</p>
+    </article>
+    <article class="dashboardTile">
+      <h2>📅 Prochaines échéances</h2>
+      ${next.length ? `<ul>${next.map(r=>`<li><strong>${escapeHTML(reminderDateLabel(r.date))}</strong> — ${escapeHTML(r.title)}</li>`).join("")}</ul>` : "<p>Aucune échéance préparée.</p>"}
+    </article>
+    <article class="dashboardTile">
+      <h2>💶 Montants à surveiller</h2>
+      <p class="dashboardNumber">${d.amounts.length}</p>
+      <p>montant${d.amounts.length>1?"s":""} détecté${d.amounts.length>1?"s":""}</p>
+    </article>
+    <article class="dashboardTile">
+      <h2>⚠️ Vérifications</h2>
+      <p class="dashboardNumber">${d.checks.length}</p>
+      <p>document${d.checks.length>1?"s":""} à vérifier</p>
+    </article>
+    <article class="dashboardTile dashboardWide">
+      <h2>🕘 Documents récents</h2>
+      ${recent.length ? `<ul>${recent.map(x=>`<li>${escapeHTML(docLabel(x))}</li>`).join("")}</ul>` : "<p>Aucun document enregistré.</p>"}
+    </article>`;
+}
+function readDashboardOverview(){
+  const d=buildDashboardOverview();
+  const parts=[
+    `Tableau de bord. ${d.docs.length} document${d.docs.length>1?"s":""} enregistré${d.docs.length>1?"s":""}.`,
+    d.upcoming.length ? `Prochaine échéance : ${reminderDateLabel(d.upcoming[0].date)}, ${d.upcoming[0].title}.` : "Aucune échéance préparée.",
+    d.amounts.length ? `${d.amounts.length} montant${d.amounts.length>1?"s":""} détecté${d.amounts.length>1?"s":""}.` : "Aucun montant à surveiller enregistré.",
+    d.checks.length ? `${d.checks.length} document${d.checks.length>1?"s":""} demande${d.checks.length>1?"nt":""} une vérification.` : "Aucun document signalé pour vérification."
+  ];
+  speak(parts.join(" "));
+}
 function loadSavedDocs(){
   try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
   catch(e){ return []; }

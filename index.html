@@ -64,6 +64,7 @@
     <button id="openAccess" class="outlineBtn">Ouvrir les réglages</button>
     <button id="openPrivacy" class="outlineBtn">🔐 Confidentialité</button>
     <button id="openReminders" class="outlineBtn">🔔 Mes rappels</button>
+    <button id="openDashboardOverview" class="outlineBtn">📊 Vue du jour</button>
   </div>
   <button id="quickRead" class="bigBtn secondary">🔊 Lecture rapide</button>
 
@@ -168,6 +169,16 @@
   <details class="card"><summary>Texte reconnu</summary><pre id="rawText"></pre></details>
   <div class="notice"><strong>ℹ️ À savoir</strong><p>Les informations sont extraites automatiquement. Vérifiez toujours le document original avant une décision, une signature ou un paiement.</p></div>
   <button id="saveResult" class="bigBtn secondary">💾 Enregistrer sur cet appareil</button>
+</section>
+
+<section id="dashboardOverview" class="screen" aria-labelledby="dashboardOverviewTitle">
+  <button id="backFromDashboardOverview" class="backBtn">← Retour</button>
+  <h1 id="dashboardOverviewTitle">📊 Mon tableau de bord</h1>
+  <div class="dashboardActions">
+    <button id="readDashboard" class="bigBtn">🔊 Lire le tableau de bord</button>
+    <button id="refreshDashboard" class="outlineBtn">🔄 Actualiser</button>
+  </div>
+  <div id="dashboardCards" class="dashboardGrid"></div>
 </section>
 
 <section id="saved" class="screen" aria-labelledby="savedTitle">
