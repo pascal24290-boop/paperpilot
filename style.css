@@ -35,3 +35,7 @@ body.highContrast .bigBtn{background:#fff;color:#000;border-color:#fff}body.high
 
 .voiceStatus{font-size:14px;margin:10px 0 0;opacity:.8}
 .voiceStatus.recording{font-weight:800;opacity:1}
+
+.importantBox{background:#fff7d6;border:2px solid #7a5b00;border-radius:15px;padding:15px;margin:12px 0;font-size:17px;line-height:1.5}
+.reminderCard{border-left:6px solid #374151}
+body.highContrast .importantBox{background:#000;color:#fff;border-color:#fff}
