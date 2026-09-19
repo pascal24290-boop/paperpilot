@@ -1,39 +1,127 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#5b4bff"><title>PaperPilot V3</title><link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="PaperPilot - comprendre ses documents simplement">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>PaperPilot</title>
 </head>
-<body><main>
-<header><b>📄 Paper<span>Pilot</span></b><button id="settings" aria-label="Réglages d’accessibilité">⚙️</button></header>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">PaperPilot</div>
+    <div class="tagline">Vos documents. Compris. Simplifiés.</div>
+  </div>
+  <button id="speakWelcome" class="iconBtn" aria-label="Écouter l'accueil">🔊</button>
+</header>
 
-<section id="home">
-<div class="hero"><small>VOTRE ASSISTANT DOCUMENTAIRE</small><h1>Comprenez vos documents simplement.</h1>
-<p>Importez une photo : PaperPilot repère le type de document, les dates, les montants et ce qui mérite votre attention.</p></div>
-<button class="primary" id="camera">📷 Scanner un document</button>
-<input id="file" type="file" accept="image/*" capture="environment" hidden>
-<div class="grid"><button id="gallery">🖼️ Choisir une photo</button><button id="speakTest">🔊 Tester la voix</button></div>
-<div class="access">♿ <strong>Accessible à tous</strong><br><span>Gros boutons, texte adaptable et lecture vocale.</span></div>
+<main>
+<section id="home" class="screen active" aria-labelledby="homeTitle">
+  <h1 id="homeTitle">Bonjour 👋</h1>
+  <p class="intro">Photographiez un document et PaperPilot vous aide à comprendre l’essentiel.</p>
+
+  <div class="card primary">
+    <h2>📷 Analyser un document</h2>
+    <p>Photo ou image depuis votre téléphone.</p>
+    <label class="bigBtn" for="fileInput">Choisir une image</label>
+    <input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
+  </div>
+
+  <button id="voiceTest" class="bigBtn secondary">🔊 Tester la lecture vocale</button>
+
+  <div class="card">
+    <h2>♿ Accessibilité</h2>
+    <p>Texte agrandi, contraste renforcé et lecture automatique.</p>
+    <button id="openAccess" class="outlineBtn">Ouvrir les réglages</button>
+  </div>
+
+  <div class="notice">
+    <strong>Confidentialité</strong>
+    <p>Dans cette version, la lecture du texte se fait dans votre navigateur. Pour les tests, utilisez de préférence des documents non sensibles.</p>
+  </div>
 </section>
 
-<section id="loading" hidden><button id="backLoad">‹ Retour</button><h2>🤖 PaperPilot analyse…</h2><p id="status">Préparation…</p><div class="bar"><i id="bar"></i></div></section>
-
-<section id="result" hidden>
-<button id="back">‹ Retour</button>
-<div class="badge">DOCUMENT ANALYSÉ</div><h2 id="title">Document</h2>
-<article><h3>📋 De quoi s’agit-il ?</h3><p id="kind">Analyse…</p></article>
-<article><h3>💡 En résumé</h3><p id="summary"></p></article>
-<article class="dates"><h3>📅 Dates importantes</h3><div id="dates"></div></article>
-<article><h3>💶 Montants détectés</h3><div id="amounts">Aucun montant détecté.</div></article>
-<article><h3>⚠️ À vérifier</h3><div id="actions"></div></article>
-<details><summary>Voir le texte reconnu</summary><pre id="raw"></pre></details>
-<button class="primary" id="listen">🔊 Écouter l’explication</button>
-<button class="secondary" id="save">💾 Enregistrer</button>
+<section id="loading" class="screen" aria-live="polite">
+  <div class="loaderCard">
+    <div class="spinner" aria-hidden="true">⏳</div>
+    <h2>Analyse en cours…</h2>
+    <p id="progressText">Préparation de la lecture…</p>
+    <div class="progress"><div id="progressBar"></div></div>
+  </div>
 </section>
 
-<section id="profile" hidden><h2>♿ Accessibilité</h2>
-<button id="large">🔎 Augmenter le texte</button><button id="contrast">◐ Contraste renforcé</button>
-<div class="access"><strong>VoiceOver / TalkBack</strong><br><span>Les commandes sont nommées pour être annoncées par les lecteurs d’écran.</span></div></section>
+<section id="result" class="screen" aria-labelledby="resultTitle">
+  <button id="backHome" class="backBtn">← Retour</button>
+  <div class="resultHeader">
+    <span class="badge">ANALYSE TERMINÉE</span>
+    <h1 id="resultTitle">Document</h1>
+  </div>
+
+  <div class="card highlight">
+    <h2>💡 En clair</h2>
+    <p id="plainSummary"></p>
+  </div>
+
+  <div class="card">
+    <h2>📄 Ce que j’ai trouvé</h2>
+    <p id="docType"></p>
+    <div id="datesBlock"></div>
+    <div id="amountsBlock"></div>
+    <div id="actionsBlock"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔊 Écouter l’explication</h2>
+    <div class="row">
+      <button id="speakResult" class="bigBtn">▶️ Écouter</button>
+      <button id="stopSpeech" class="outlineBtn">⏹ Stop</button>
+    </div>
+  </div>
+
+  <details class="card">
+    <summary>Texte reconnu</summary>
+    <pre id="rawText"></pre>
+  </details>
+
+  <div class="notice">
+    <strong>ℹ️ À savoir</strong>
+    <p>Cette explication est basée sur le texte reconnu automatiquement. Vérifiez toujours le document original avant de prendre une décision ou d’effectuer un paiement.</p>
+  </div>
+
+  <button id="saveResult" class="bigBtn secondary">💾 Enregistrer sur cet appareil</button>
+</section>
+
+<section id="saved" class="screen" aria-labelledby="savedTitle">
+  <h1 id="savedTitle">Mes documents</h1>
+  <div id="savedList"></div>
+  <button id="clearSaved" class="outlineBtn">Supprimer les enregistrements locaux</button>
+</section>
+
+<section id="access" class="screen" aria-labelledby="accessTitle">
+  <button id="backFromAccess" class="backBtn">← Retour</button>
+  <h1 id="accessTitle">Accessibilité</h1>
+  <div class="card">
+    <label class="toggleRow"><span>Texte agrandi</span><input id="largeText" type="checkbox"></label>
+    <label class="toggleRow"><span>Contraste renforcé</span><input id="highContrast" type="checkbox"></label>
+    <label class="toggleRow"><span>Lire automatiquement les résultats</span><input id="autoSpeak" type="checkbox"></label>
+  </div>
+  <div class="card">
+    <h2>Compatibilité</h2>
+    <p>Les boutons et zones importantes utilisent des libellés lisibles par VoiceOver sur iPhone et TalkBack sur Android.</p>
+  </div>
+</section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script><script src="app.js"></script>
-</body></html>
+
+<nav class="bottomNav" aria-label="Navigation principale">
+  <button data-screen="home">🏠<span>Accueil</span></button>
+  <button data-screen="saved">📁<span>Documents</span></button>
+  <button data-screen="access">♿<span>Accessibilité</span></button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

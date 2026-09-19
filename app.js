@@ -1,28 +1,128 @@
-const $=id=>document.getElementById(id);let data={text:"",dates:[],amounts:[],actions:[],kind:"Document"};
-function show(id){["home","loading","result","profile"].forEach(x=>$(x).hidden=x!==id)}
-$("camera").onclick=()=>$("file").click();$("gallery").onclick=()=>$("file").click();$("back").onclick=()=>show("home");$("backLoad").onclick=()=>show("home");
-$("settings").onclick=()=>show("profile");$("large").onclick=()=>document.documentElement.classList.toggle("largeText");$("contrast").onclick=()=>document.body.classList.toggle("contrast");
-$("speakTest").onclick=()=>speak("Bienvenue dans PaperPilot. Votre assistant pour comprendre vos documents.");
-$("file").onchange=e=>{if(e.target.files[0])analyze(e.target.files[0])};
-async function analyze(file){show("loading");$("bar").style.width="10%";$("status").textContent="Lecture du document…";try{
-let r=await Tesseract.recognize(file,"fra+eng",{logger:m=>{if(m.status==="recognizing text"){let n=20+Math.round(m.progress*70);$("bar").style.width=n+"%";$("status").textContent="Reconnaissance du texte : "+n+"%"}}});
-data.text=(r.data.text||"").trim();interpret();$("bar").style.width="100%";setTimeout(()=>show("result"),300)
-}catch(e){data.text="La lecture a échoué. Essayez une photo nette et bien éclairée.";interpret();show("result")}}
-function interpret(){let t=data.text,l=t.toLowerCase();data.dates=[];data.amounts=[];data.actions=[];
-let m,re=/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/g;while((m=re.exec(t)))data.dates.push(m[0]);
-re=/\b(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(20\d{2})\b/gi;while((m=re.exec(t)))data.dates.push(m[0]);
-re=/\b\d{1,5}(?:[ .]\d{3})*(?:,\d{2})?\s*(?:€|euros?)\b/gi;while((m=re.exec(t)))data.amounts.push(m[0]);
-if(/assurance/.test(l))data.kind="Document d’assurance";else if(/facture|montant à payer|total à payer/.test(l))data.kind="Facture";else if(/impôt|impots|fiscal|taxe/.test(l))data.kind="Document fiscal";else if(/contrat/.test(l))data.kind="Contrat";else if(/banque|relevé bancaire/.test(l))data.kind="Document bancaire";else if(/courrier|madame|monsieur/.test(l))data.kind="Courrier";
-if(/payer|paiement|régler|regler/.test(l))data.actions.push("Vérifier le montant et la date limite de paiement.");
-if(/échéance|echeance|renouvellement|renouvelé|renouvele/.test(l))data.actions.push("Vérifier l’échéance et les conditions de renouvellement.");
-if(/signature|signer/.test(l))data.actions.push("Vérifier les informations avant de signer.");
-if(/répondre|réponse|reponse|délai|delai/.test(l))data.actions.push("Vérifier s’il faut répondre dans le délai indiqué.");
-if(!data.actions.length)data.actions.push("Relire les informations importantes et vérifier les dates détectées.");
-$("title").textContent=data.kind;$("kind").textContent=`Ce document ressemble à : ${data.kind}.`;
-$("summary").textContent=t?`PaperPilot a reconnu le document. Il contient ${data.dates.length} date(s) et ${data.amounts.length} montant(s). Consultez les rubriques ci-dessous pour les éléments à vérifier.`:"Aucun texte exploitable n’a été reconnu.";
-$("dates").innerHTML=data.dates.length?data.dates.map(x=>`<div class="date">📅 ${x}</div>`).join(""):"Aucune date détectée.";
-$("amounts").innerHTML=data.amounts.length?data.amounts.map(x=>`<div class="amount">💶 ${x}</div>`).join(""):"Aucun montant détecté.";
-$("actions").innerHTML=data.actions.map(x=>`<div class="action">☐ ${x}</div>`).join("");$("raw").textContent=t||"Aucun texte reconnu."}
-function speak(s){if("speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(s))}}
-$("listen").onclick=()=>speak(`${data.kind}. ${$("summary").textContent}. Dates : ${data.dates.join(", ")||"aucune"}. Montants : ${data.amounts.join(", ")||"aucun"}. À vérifier : ${data.actions.join(" ")}`);
-$("save").onclick=()=>{localStorage.setItem("paperpilotLast",JSON.stringify(data));$("save").textContent="✓ Enregistré"};
+const $=id=>document.getElementById(id);
+let lastResult=null;
+
+const screens=["home","loading","result","saved","access"];
+function showScreen(name){
+  screens.forEach(s=>$(s).classList.toggle("active",s===name));
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(name==="saved") renderSaved();
+}
+document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
+$("openAccess").onclick=()=>showScreen("access");
+$("backFromAccess").onclick=()=>showScreen("home");
+$("backHome").onclick=()=>showScreen("home");
+
+function speak(text){
+  if(!("speechSynthesis" in window)){alert("La lecture vocale n’est pas disponible sur ce navigateur.");return}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="fr-FR";u.rate=.92;
+  speechSynthesis.speak(u);
+}
+$("speakWelcome").onclick=()=>speak("Bienvenue dans PaperPilot. Choisissez une image pour analyser un document.");
+$("voiceTest").onclick=()=>speak("La lecture vocale de PaperPilot fonctionne. Vous pourrez écouter l'explication de votre document.");
+
+function setProgress(n,msg){$("progressBar").style.width=n+"%";$("progressText").textContent=msg}
+
+function detectType(t){
+  const x=t.toLowerCase();
+  if(/assurance|sinistre|garantie|assuré/.test(x)) return "📄 Assurance";
+  if(/facture|montant à payer|tva|échéance de paiement/.test(x)) return "🧾 Facture";
+  if(/impôt|taxe|déclaration|revenu fiscal|trésor public/.test(x)) return "🏛️ Document fiscal";
+  if(/contrat|conditions générales|résiliation|engagement/.test(x)) return "📝 Contrat";
+  if(/iban|virement|compte bancaire|relevé de compte/.test(x)) return "🏦 Document bancaire";
+  if(/ordonnance|prescription|posologie|médicament/.test(x)) return "💊 Prescription / santé";
+  if(/cher monsieur|cher madame|objet\s*:|cordialement/.test(x)) return "✉️ Lettre / courrier";
+  return "📄 Document général";
+}
+function extractDates(t){
+  const re=/\b(?:0?[1-9]|[12]\d|3[01])(?:[\/.-])(?:0?[1-9]|1[0-2])(?:[\/.-])(?:20\d{2}|19\d{2})\b/g;
+  return [...new Set(t.match(re)||[])].slice(0,12);
+}
+function extractAmounts(t){
+  const re=/(?:€\s*)?\b\d{1,3}(?:[ .]\d{3})*(?:[,.]\d{2})?\s*(?:€|EUR)\b|\b\d+(?:[,.]\d{2})?\s*€/gi;
+  return [...new Set(t.match(re)||[])].slice(0,12);
+}
+function detectActions(t){
+  const x=t.toLowerCase(), out=[];
+  if(/payer|paiement|règlement|réglée|régler/.test(x)) out.push("Vérifier le montant et la date de paiement.");
+  if(/signer|signature/.test(x)) out.push("Vérifier les informations avant de signer.");
+  if(/répondre|retourner|envoyer|transmettre|joindre/.test(x)) out.push("Vérifier s’il faut répondre ou envoyer un document.");
+  if(/résilier|résiliation|préavis/.test(x)) out.push("Vérifier les conditions et le délai de résiliation.");
+  if(/rendez-vous|consultation|convocation/.test(x)) out.push("Vérifier la date et l’heure du rendez-vous.");
+  if(!out.length) out.push("Relire les informations importantes et vérifier s’il y a une échéance.");
+  return out;
+}
+function plainSummary(type,dates,amounts,actions){
+  let s=`Ce document semble être : ${type.replace(/^.\s/,"")}. `;
+  if(amounts.length) s+=`J’ai repéré ${amounts.length===1?"un montant":"plusieurs montants"}. `;
+  if(dates.length) s+=`J’ai repéré ${dates.length===1?"une date":"plusieurs dates"}. `;
+  s+=actions[0];
+  return s;
+}
+function block(title,items){
+  if(!items.length) return `<div class="item"><strong>${title}</strong><span>Aucune information détectée automatiquement.</span></div>`;
+  return `<div class="item"><strong>${title}</strong><ul>${items.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+
+async function analyze(file){
+  showScreen("loading");setProgress(8,"Préparation de la lecture…");
+  try{
+    if(!window.Tesseract) throw new Error("Le moteur OCR n’a pas pu être chargé. Vérifiez votre connexion internet.");
+    const result=await Tesseract.recognize(file,"fra+eng",{
+      logger:m=>{
+        if(m.status==="recognizing text") setProgress(10+Math.round((m.progress||0)*75),"Lecture du document…");
+      }
+    });
+    setProgress(90,"Compréhension des éléments importants…");
+    const text=(result.data.text||"").trim();
+    if(!text) throw new Error("Aucun texte lisible n’a été détecté. Essayez une photo plus nette et bien éclairée.");
+    const type=detectType(text),dates=extractDates(text),amounts=extractAmounts(text),actions=detectActions(text);
+    lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,actions,text};
+    $("resultTitle").textContent=type;
+    $("plainSummary").textContent=lastResult.plain;
+    $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
+    $("datesBlock").innerHTML=block("📅 Dates",dates);
+    $("amountsBlock").innerHTML=block("💶 Montants",amounts);
+    $("actionsBlock").innerHTML=block("✅ Actions à vérifier",actions);
+    $("rawText").textContent=text;
+    setProgress(100,"Terminé.");
+    showScreen("result");
+    if(localStorage.getItem("paperpilot-autoSpeak")==="1") speak(lastResult.plain);
+  }catch(e){
+    alert(e.message||"Une erreur est survenue.");
+    showScreen("home");
+  }
+}
+$("fileInput").addEventListener("change",e=>{
+  const f=e.target.files?.[0];if(f) analyze(f);
+  e.target.value="";
+});
+$("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));
+$("stopSpeech").onclick=()=>speechSynthesis.cancel();
+$("saveResult").onclick=()=>{
+  if(!lastResult)return;
+  const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");
+  a.unshift(lastResult);localStorage.setItem("paperpilot-docs",JSON.stringify(a.slice(0,30)));
+  alert("Document enregistré sur cet appareil.");
+};
+function renderSaved(){
+  const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]"),box=$("savedList");
+  if(!a.length){box.innerHTML='<div class="card"><p>Aucun document enregistré pour le moment.</p></div>';return}
+  box.innerHTML=a.map(d=>`<div class="card"><h2>${escapeHtml(d.type)}</h2><p>${escapeHtml(d.plain)}</p><small>${new Date(d.id).toLocaleString("fr-FR")}</small></div>`).join("");
+}
+$("clearSaved").onclick=()=>{if(confirm("Supprimer les documents enregistrés sur cet appareil ?")){localStorage.removeItem("paperpilot-docs");renderSaved();}};
+
+function setPref(key,value){localStorage.setItem(key,value?"1":"0")}
+$("largeText").checked=localStorage.getItem("paperpilot-large")==="1";
+$("highContrast").checked=localStorage.getItem("paperpilot-contrast")==="1";
+$("autoSpeak").checked=localStorage.getItem("paperpilot-autoSpeak")==="1";
+function applyAccess(){
+  document.body.classList.toggle("largeText",$("largeText").checked);
+  document.body.classList.toggle("highContrast",$("highContrast").checked);
+}
+$("largeText").onchange=()=>{setPref("paperpilot-large",$("largeText").checked);applyAccess()};
+$("highContrast").onchange=()=>{setPref("paperpilot-contrast",$("highContrast").checked);applyAccess()};
+$("autoSpeak").onchange=()=>setPref("paperpilot-autoSpeak",$("autoSpeak").checked);
+applyAccess();
