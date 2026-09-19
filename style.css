@@ -32,3 +32,6 @@ body.highContrast{background:#000;color:#fff}body.highContrast .card,body.highCo
 body.highContrast .outlineBtn,body.highContrast .questionBtn{background:#000;color:#fff;border-color:#fff}body.highContrast .backBtn,body.highContrast .bottomNav button{color:#fff}
 body.highContrast .bigBtn{background:#fff;color:#000;border-color:#fff}body.highContrast .notice{border:2px solid #fff}
 @media(max-width:420px){main{padding:14px}.row,.questionGrid{grid-template-columns:1fr}.tagline{font-size:11px}}
+
+.voiceStatus{font-size:14px;margin:10px 0 0;opacity:.8}
+.voiceStatus.recording{font-weight:800;opacity:1}

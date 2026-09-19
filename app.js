@@ -43,6 +43,44 @@ $("askQuestion").onclick=()=>{
 $("userQuestion").addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==="Enter") $("askQuestion").click();
 });
+let recognition=null;
+let listening=false;
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SpeechRecognition){
+  recognition=new SpeechRecognition();
+  recognition.lang="fr-FR";
+  recognition.interimResults=false;
+  recognition.continuous=false;
+  recognition.onstart=()=>{
+    listening=true;
+    $("voiceQuestion").textContent="⏹️ Arrêter";
+    $("voiceStatus").textContent="🎙️ Je vous écoute…";
+    $("voiceStatus").classList.add("recording");
+  };
+  recognition.onresult=e=>{
+    const transcript=e.results?.[0]?.[0]?.transcript||"";
+    $("userQuestion").value=transcript;
+    lastAnswer=answerFreeQuestion(transcript);
+    $("assistantAnswer").textContent=lastAnswer;
+    speak(lastAnswer);
+  };
+  recognition.onerror=e=>{
+    $("voiceStatus").textContent=e.error==="not-allowed"?"Microphone non autorisé. Vous pouvez écrire votre question.":"La reconnaissance vocale n’a pas pu démarrer. Vous pouvez écrire votre question.";
+  };
+  recognition.onend=()=>{
+    listening=false;
+    $("voiceQuestion").textContent="🎙️ Parler";
+    $("voiceStatus").textContent="Vous pouvez écrire ou utiliser votre voix si votre navigateur le permet.";
+    $("voiceStatus").classList.remove("recording");
+  };
+  $("voiceQuestion").onclick=()=>{
+    if(listening){recognition.stop();return}
+    try{recognition.start()}catch(e){}
+  };
+}else{
+  $("voiceQuestion").onclick=()=>alert("La saisie vocale n’est pas disponible dans ce navigateur. Vous pouvez écrire votre question.");
+}
+
 
 async function analyze(file){showScreen("loading");setProgress(8,"Préparation de la lecture…");try{if(!window.Tesseract)throw new Error("Le moteur OCR n’a pas pu être chargé. Vérifiez votre connexion internet.");const result=await Tesseract.recognize(file,"fra+eng",{logger:m=>{if(m.status==="recognizing text")setProgress(10+Math.round((m.progress||0)*75),"Lecture du document…")}});setProgress(90,"Compréhension des éléments importants…");const text=(result.data.text||"").trim();if(!text)throw new Error("Aucun texte lisible n’a été détecté. Essayez une photo plus nette et bien éclairée.");const type=detectType(text),dates=extractDates(text),amounts=extractAmounts(text),actions=detectActions(text);lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,actions,text};$("resultTitle").textContent=type;$("plainSummary").textContent=lastResult.plain;$("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;$("datesBlock").innerHTML=block("📅 Dates",dates);$("amountsBlock").innerHTML=block("💶 Montants",amounts);$("actionsBlock").innerHTML=block("✅ Actions à vérifier",actions);$("rawText").textContent=text;$("assistantAnswer").textContent="Choisissez une question.";lastAnswer="";setProgress(100,"Terminé.");showScreen("result");if(localStorage.getItem("paperpilot-autoSpeak")==="1")speak(lastResult.plain)}catch(e){alert(e.message||"Une erreur est survenue.");showScreen("home")}}
 $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)analyze(f);e.target.value=""});
