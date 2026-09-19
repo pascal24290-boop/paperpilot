@@ -34,6 +34,7 @@
     <p>Texte agrandi, contraste renforcé et lecture automatique.</p>
     <button id="openAccess" class="outlineBtn">Ouvrir les réglages</button>
     <button id="openPrivacy" class="outlineBtn">🔐 Confidentialité</button>
+    <button id="openReminders" class="outlineBtn">🔔 Mes rappels</button>
   </div>
   <button id="quickRead" class="bigBtn secondary">🔊 Lecture rapide</button>
 
@@ -74,6 +75,12 @@
     <button id="speakAnswer" class="outlineBtn">🔊 Écouter la réponse</button>
   </div>
 
+  <div class="card reminderCard">
+    <h2>🔔 Échéance à retenir</h2>
+    <p id="deadlineText">Aucune échéance détectée.</p>
+    <button id="prepareReminder" class="bigBtn">🔔 Préparer un rappel</button>
+    <p id="reminderStatus" class="muted" aria-live="polite"></p>
+  </div>
   <div class="card confidenceCard">
     <h2>⚠️ Fiabilité</h2>
     <p id="confidenceText">PaperPilot vérifie automatiquement certains éléments, mais une lecture humaine du document original reste recommandée.</p>
@@ -118,6 +125,15 @@
     <div id="savedList"></div>
   </div>
   <button id="clearSaved" class="outlineBtn">🗑️ Supprimer tous les documents</button>
+</section>
+
+<section id="reminders" class="screen" aria-labelledby="remindersTitle">
+  <button id="backFromReminders" class="backBtn">← Retour</button>
+  <h1 id="remindersTitle">🔔 Mes rappels</h1>
+  <div class="card">
+    <p id="reminderCount" class="muted"></p>
+    <div id="reminderList"></div>
+  </div>
 </section>
 
 <section id="privacy" class="screen" aria-labelledby="privacyTitle">

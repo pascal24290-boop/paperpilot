@@ -77,3 +77,12 @@ button,label{touch-action:manipulation}
   font-weight:700;
   cursor:pointer;
 }
+
+.reminderCard{border-left:6px solid currentColor}
+.reminderItem{
+  border:2px solid currentColor;
+  border-radius:14px;
+  padding:1rem;
+  margin-top:1rem;
+}
+.reminderItem h2{margin-top:0}

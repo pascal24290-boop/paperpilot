@@ -1,11 +1,14 @@
 const $=id=>document.getElementById(id);
 let lastResult=null,lastAnswer="";
-const screens=["home","loading","result","saved","privacy","access"];
+const screens=["home","loading","result","saved","reminders","privacy","access"];
 function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===name));window.scrollTo({top:0,behavior:"smooth"});if(name==="saved")renderSaved();}
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
 
 $("savedSearch")?.addEventListener("input",renderSaved);
 $("saveCurrent")?.addEventListener("click",()=>{ if(typeof saveResult==="function") saveResult(); });
+$("prepareReminder")?.addEventListener("click",prepareReminder);
+$("openReminders")?.addEventListener("click",()=>{renderReminders();showScreen("reminders");});
+$("backFromReminders")?.addEventListener("click",()=>showScreen("home"));
 $("openAccess").onclick=()=>showScreen("access");$("openPrivacy").onclick=()=>showScreen("privacy");$("backFromPrivacy").onclick=()=>showScreen("home");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
 function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
 function guidedText(){
@@ -132,7 +135,7 @@ if(importantDates.length) important.push("Une date semble liée à une échéanc
 if(amountInfo.pay.length) important.push("Un montant semble correspondre à une somme à payer : "+amountInfo.pay[0]+".");
 important.push(actions[0]);
 lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,amountsToPay:amountInfo.pay,actions,important,text};
-$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);
+$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);updateDeadlineCard();$("reminderStatus").textContent="";
 $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
 $("importantBlock").innerHTML=`<div class="importantBox"><strong>⚠️ Points importants</strong><ul>${important.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
 $("datesBlock").innerHTML=block("📅 Dates",dates);
@@ -144,6 +147,86 @@ $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)an
 $("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));$("stopSpeech").onclick=()=>speechSynthesis.cancel();
 $("saveResult").onclick=()=>{if(!lastResult)return;const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");a.unshift(lastResult);localStorage.setItem("paperpilot-docs",JSON.stringify(a.slice(0,30)));alert("Document enregistré sur cet appareil.")};
 function deleteLocalData(){localStorage.removeItem("paperpilot-docs");alert("Les documents et résultats locaux ont été supprimés.");renderSaved();}
+
+function loadReminders(){
+  try { return JSON.parse(localStorage.getItem("paperpilot-reminders") || "[]"); }
+  catch(e){ return []; }
+}
+function saveReminders(reminders){
+  localStorage.setItem("paperpilot-reminders", JSON.stringify(reminders));
+}
+function reminderDateLabel(dateText){
+  const d=new Date(dateText+"T09:00:00");
+  if(Number.isNaN(d.getTime())) return dateText;
+  return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
+}
+function nextDetectedDate(){
+  const dates=(lastResult?.dates||[]).map(String);
+  const parsed=dates.map(raw=>{
+    const m=raw.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+    if(!m) return null;
+    let y=Number(m[3]); if(y<100)y+=2000;
+    const d=new Date(y,Number(m[2])-1,Number(m[1]));
+    return {raw,date:d};
+  }).filter(x=>x && !Number.isNaN(x.date.getTime()));
+  parsed.sort((a,b)=>a.date-b.date);
+  return parsed.find(x=>x.date >= new Date(new Date().setHours(0,0,0,0))) || parsed[0] || null;
+}
+function updateDeadlineCard(){
+  const out=$("deadlineText");
+  if(!out) return;
+  const found=nextDetectedDate();
+  if(!found){
+    out.textContent="Aucune date d’échéance clairement détectée.";
+    return;
+  }
+  out.textContent=`Date détectée : ${found.raw}. Vérifiez qu’il s’agit bien de l’échéance sur le document original.`;
+}
+function prepareReminder(){
+  const found=nextDetectedDate();
+  const status=$("reminderStatus");
+  if(!found){
+    if(status) status.textContent="Aucune date exploitable n’a été détectée.";
+    return;
+  }
+  const reminders=loadReminders();
+  const key=found.date.toISOString().slice(0,10);
+  const duplicate=reminders.some(r=>r.date===key && r.label===found.raw);
+  if(!duplicate){
+    reminders.push({
+      id:Date.now(),
+      date:key,
+      label:found.raw,
+      title:lastResult?.type || "Document",
+      createdAt:new Date().toISOString()
+    });
+    reminders.sort((a,b)=>a.date.localeCompare(b.date));
+    saveReminders(reminders);
+  }
+  if(status) status.textContent="Rappel préparé dans PaperPilot. La version actuelle ne peut pas encore déclencher une notification système.";
+  renderReminders();
+}
+function deleteReminder(id){
+  const reminders=loadReminders().filter(r=>r.id!==id);
+  saveReminders(reminders);
+  renderReminders();
+}
+function renderReminders(){
+  const box=$("reminderList");
+  if(!box) return;
+  const reminders=loadReminders();
+  $("reminderCount").textContent=`${reminders.length} rappel${reminders.length>1?"s":""} enregistré${reminders.length>1?"s":""}`;
+  if(!reminders.length){
+    box.innerHTML='<p>📭 Aucun rappel préparé pour le moment.</p>';
+    return;
+  }
+  box.innerHTML=reminders.map(r=>`<article class="reminderItem">
+    <h2>🔔 ${escapeHTML(r.title)}</h2>
+    <p><strong>📅 ${escapeHTML(reminderDateLabel(r.date))}</strong></p>
+    <p>Date détectée : ${escapeHTML(r.label)}</p>
+    <button class="dangerBtn" onclick="deleteReminder(${r.id})">🗑️ Supprimer</button>
+  </article>`).join("");
+}
 function loadSavedDocs(){
   try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
   catch(e){ return []; }
