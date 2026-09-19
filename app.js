@@ -3,6 +3,9 @@ let lastResult=null,lastAnswer="";
 const screens=["home","loading","result","saved","privacy","access"];
 function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===name));window.scrollTo({top:0,behavior:"smooth"});if(name==="saved")renderSaved();}
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
+
+$("savedSearch")?.addEventListener("input",renderSaved);
+$("saveCurrent")?.addEventListener("click",()=>{ if(typeof saveResult==="function") saveResult(); });
 $("openAccess").onclick=()=>showScreen("access");$("openPrivacy").onclick=()=>showScreen("privacy");$("backFromPrivacy").onclick=()=>showScreen("home");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
 function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
 function guidedText(){
@@ -140,20 +143,76 @@ $("rawText").textContent=text;$("assistantAnswer").textContent="Choisissez une q
 $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)analyze(f);e.target.value=""});
 $("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));$("stopSpeech").onclick=()=>speechSynthesis.cancel();
 $("saveResult").onclick=()=>{if(!lastResult)return;const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");a.unshift(lastResult);localStorage.setItem("paperpilot-docs",JSON.stringify(a.slice(0,30)));alert("Document enregistré sur cet appareil.")};
-function deleteLocalData(){localStorage.removeItem("paperpilot-docs");alert("Les documents et résultats locaux ont été supprimés.");renderSaved();}function renderSaved(){
-  const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");
-  const stats=$("dashboardStats"), due=$("dueList"), money=$("moneyList"), box=$("savedList");
-  const dates=a.flatMap(d=>d.dates||[]), moneyVals=a.flatMap(d=>d.amountsToPay||d.amounts||[]);
-  stats.innerHTML=`<div class="stat"><strong>${a.length}</strong><span>Documents</span></div><div class="stat"><strong>${dates.length}</strong><span>Dates détectées</span></div><div class="stat"><strong>${moneyVals.length}</strong><span>Montants</span></div><div class="stat"><strong>${a.filter(d=>(d.actions||[]).length).length}</strong><span>À vérifier</span></div>`;
-  if(!a.length){
-    due.innerHTML='<p>Aucune échéance enregistrée.</p>';
-    money.innerHTML='<p>Aucun montant enregistré.</p>';
-    box.innerHTML='<div class="card"><p>Aucun document enregistré pour le moment.</p></div>';
+function deleteLocalData(){localStorage.removeItem("paperpilot-docs");alert("Les documents et résultats locaux ont été supprimés.");renderSaved();}
+function loadSavedDocs(){
+  try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
+  catch(e){ return []; }
+}
+function saveSavedDocs(docs){
+  localStorage.setItem("paperpilot-docs", JSON.stringify(docs));
+}
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[ch]));
+}
+function docLabel(doc){
+  return doc.title || doc.type || "Document";
+}
+function docSummary(doc){
+  return doc.plain || doc.explanation || "Aucun résumé disponible.";
+}
+function openSavedDoc(index){
+  const docs=loadSavedDocs();
+  const doc=docs[index];
+  if(!doc) return;
+  lastResult=doc;
+  $("resultTitle").textContent=doc.type || "Document";
+  $("plainSummary").textContent=docSummary(doc);
+  $("confidenceText").textContent="Document enregistré localement. Vérifiez toujours les informations sur l’original.";
+  $("result").scrollTop=0;
+  showScreen("result");
+  $("resultTitle").focus();
+}
+function deleteSavedDoc(index){
+  const docs=loadSavedDocs();
+  if(!docs[index]) return;
+  if(confirm("Supprimer ce document enregistré sur cet appareil ?")){
+    docs.splice(index,1);
+    saveSavedDocs(docs);
+    renderSaved();
+  }
+}
+function renderSaved(){
+  const list=$("savedList");
+  if(!list) return;
+  const docs=loadSavedDocs();
+  const query=($("savedSearch")?.value || "").trim().toLowerCase();
+  const filtered=docs.map((doc,index)=>({doc,index})).filter(({doc})=>{
+    if(!query) return true;
+    const hay=[docLabel(doc),doc.type,docSummary(doc),...(doc.dates||[]),...(doc.amountsToPay||[])].join(" ").toLowerCase();
+    return hay.includes(query);
+  });
+  $("savedCount").textContent = `${filtered.length} document${filtered.length>1?"s":""} affiché${filtered.length>1?"s":""} sur ${docs.length}`;
+  if(!filtered.length){
+    list.innerHTML='<div class="card"><h2>📭 Aucun document</h2><p>Aucun document ne correspond à votre recherche.</p></div>';
     return;
   }
-  due.innerHTML=a.slice(0,10).flatMap(d=>(d.dates||[]).map(date=>`<div class="dashItem"><strong>${escapeHtml(date)}</strong><span class="status info">À vérifier</span><br><small>${escapeHtml(d.type||"Document")}</small></div>`)).join("")||"<p>Aucune date détectée.</p>";
-  money.innerHTML=a.slice(0,10).flatMap(d=>(d.amountsToPay?.length?d.amountsToPay:(d.amounts||[])).map(amount=>`<div class="dashItem"><strong>${escapeHtml(amount)}</strong><span class="status warn">Montant</span><br><small>${escapeHtml(d.type||"Document")}</small></div>`)).join("")||"<p>Aucun montant détecté.</p>";
-  box.innerHTML=a.map(d=>`<div class="card"><h2>${escapeHtml(d.type||"Document")}</h2><p>${escapeHtml(d.plain||"")}</p><small>Enregistré le ${new Date(d.savedAt||d.id).toLocaleString("fr-FR")}</small></div>`).join("");
+  list.innerHTML=filtered.map(({doc,index})=>{
+    const dates=(doc.dates||[]).slice(0,3).map(d=>`<li>📅 ${escapeHTML(d)}</li>`).join("");
+    const amounts=(doc.amountsToPay||[]).slice(0,2).map(a=>`<li>💶 ${escapeHTML(a)}</li>`).join("");
+    return `<article class="card savedDoc">
+      <h2>${escapeHTML(docLabel(doc))}</h2>
+      <p>${escapeHTML(docSummary(doc))}</p>
+      ${dates?`<ul>${dates}</ul>`:""}
+      ${amounts?`<ul>${amounts}</ul>`:""}
+      <div class="savedActions">
+        <button class="bigBtn" onclick="openSavedDoc(${index})">📖 Ouvrir</button>
+        <button class="outlineBtn" onclick="speak(${JSON.stringify(docSummary(doc))})">🔊 Lire</button>
+        <button class="dangerBtn" onclick="deleteSavedDoc(${index})">🗑️ Supprimer</button>
+      </div>
+    </article>`;
+  }).join("");
 }
 $("clearSaved").onclick=()=>{if(confirm("Supprimer les documents enregistrés sur cet appareil ?"))deleteLocalData();};$("privacyDelete").onclick=()=>{if(confirm("Supprimer toutes les données locales de PaperPilot ?"))deleteLocalData();};
 $("prepareReminder").onclick=()=>{

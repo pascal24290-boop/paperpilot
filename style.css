@@ -55,3 +55,25 @@ button,label{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 .confidenceCard{border-left:6px solid #7a5b00}
+
+.savedTools input{
+  width:100%;
+  box-sizing:border-box;
+  font-size:1.1rem;
+  padding:.85rem;
+  border-radius:12px;
+  border:2px solid currentColor;
+  margin:.6rem 0 .4rem;
+}
+.muted{opacity:.75}
+.savedDoc{margin-top:1rem}
+.savedActions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.dangerBtn{
+  min-height:52px;
+  padding:.8rem 1rem;
+  border-radius:12px;
+  border:2px solid currentColor;
+  background:transparent;
+  font-weight:700;
+  cursor:pointer;
+}
