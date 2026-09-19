@@ -118,7 +118,21 @@ $("rawText").textContent=text;$("assistantAnswer").textContent="Choisissez une q
 $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)analyze(f);e.target.value=""});
 $("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));$("stopSpeech").onclick=()=>speechSynthesis.cancel();
 $("saveResult").onclick=()=>{if(!lastResult)return;const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");a.unshift(lastResult);localStorage.setItem("paperpilot-docs",JSON.stringify(a.slice(0,30)));alert("Document enregistré sur cet appareil.")};
-function renderSaved(){const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]"),box=$("savedList");if(!a.length){box.innerHTML='<div class="card"><p>Aucun document enregistré pour le moment.</p></div>';return}box.innerHTML=a.map(d=>`<div class="card"><h2>${escapeHtml(d.type)}</h2><p>${escapeHtml(d.plain)}</p><small>${new Date(d.id).toLocaleString("fr-FR")}</small></div>`).join("")}
+function renderSaved(){
+  const a=JSON.parse(localStorage.getItem("paperpilot-docs")||"[]");
+  const stats=$("dashboardStats"), due=$("dueList"), money=$("moneyList"), box=$("savedList");
+  const dates=a.flatMap(d=>d.dates||[]), moneyVals=a.flatMap(d=>d.amountsToPay||d.amounts||[]);
+  stats.innerHTML=`<div class="stat"><strong>${a.length}</strong><span>Documents</span></div><div class="stat"><strong>${dates.length}</strong><span>Dates détectées</span></div><div class="stat"><strong>${moneyVals.length}</strong><span>Montants</span></div><div class="stat"><strong>${a.filter(d=>(d.actions||[]).length).length}</strong><span>À vérifier</span></div>`;
+  if(!a.length){
+    due.innerHTML='<p>Aucune échéance enregistrée.</p>';
+    money.innerHTML='<p>Aucun montant enregistré.</p>';
+    box.innerHTML='<div class="card"><p>Aucun document enregistré pour le moment.</p></div>';
+    return;
+  }
+  due.innerHTML=a.slice(0,10).flatMap(d=>(d.dates||[]).map(date=>`<div class="dashItem"><strong>${escapeHtml(date)}</strong><span class="status info">À vérifier</span><br><small>${escapeHtml(d.type||"Document")}</small></div>`)).join("")||"<p>Aucune date détectée.</p>";
+  money.innerHTML=a.slice(0,10).flatMap(d=>(d.amountsToPay?.length?d.amountsToPay:(d.amounts||[])).map(amount=>`<div class="dashItem"><strong>${escapeHtml(amount)}</strong><span class="status warn">Montant</span><br><small>${escapeHtml(d.type||"Document")}</small></div>`)).join("")||"<p>Aucun montant détecté.</p>";
+  box.innerHTML=a.map(d=>`<div class="card"><h2>${escapeHtml(d.type||"Document")}</h2><p>${escapeHtml(d.plain||"")}</p><small>Enregistré le ${new Date(d.savedAt||d.id).toLocaleString("fr-FR")}</small></div>`).join("");
+}
 $("clearSaved").onclick=()=>{if(confirm("Supprimer les documents enregistrés sur cet appareil ?")){localStorage.removeItem("paperpilot-docs");renderSaved()}};
 $("prepareReminder").onclick=()=>{
   if(!lastResult)return;

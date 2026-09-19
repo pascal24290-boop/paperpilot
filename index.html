@@ -97,7 +97,20 @@
 </section>
 
 <section id="saved" class="screen" aria-labelledby="savedTitle">
-  <h1 id="savedTitle">Mes documents</h1><div id="savedList"></div>
+  <h1 id="savedTitle">Mon tableau de bord</h1>
+  <div id="dashboardStats" class="statsGrid"></div>
+  <div class="card">
+    <h2>📅 Échéances à surveiller</h2>
+    <div id="dueList"></div>
+  </div>
+  <div class="card">
+    <h2>💶 Montants importants</h2>
+    <div id="moneyList"></div>
+  </div>
+  <div class="card">
+    <h2>📁 Mes documents</h2>
+    <div id="savedList"></div>
+  </div>
   <button id="clearSaved" class="outlineBtn">Supprimer les enregistrements locaux</button>
 </section>
 
@@ -114,7 +127,7 @@
 
 <nav class="bottomNav" aria-label="Navigation principale">
 <button data-screen="home">🏠<span>Accueil</span></button>
-<button data-screen="saved">📁<span>Documents</span></button>
+<button data-screen="saved">📊<span>Tableau de bord</span></button>
 <button data-screen="access">♿<span>Accessibilité</span></button>
 </nav>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>

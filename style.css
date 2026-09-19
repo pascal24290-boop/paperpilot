@@ -39,3 +39,13 @@ body.highContrast .bigBtn{background:#fff;color:#000;border-color:#fff}body.high
 .importantBox{background:#fff7d6;border:2px solid #7a5b00;border-radius:15px;padding:15px;margin:12px 0;font-size:17px;line-height:1.5}
 .reminderCard{border-left:6px solid #374151}
 body.highContrast .importantBox{background:#000;color:#fff;border-color:#fff}
+
+.statsGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.stat{background:#fff;border-radius:18px;padding:16px;text-align:center;border:2px solid #e5e7eb}
+.stat strong{display:block;font-size:28px}.stat span{font-size:14px}
+.dashItem{padding:13px 0;border-bottom:1px solid #e5e7eb}.dashItem:last-child{border-bottom:0}
+.status{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;margin-left:5px}
+.status.warn{background:#fff0c2}.status.info{background:#dbeafe}.status.ok{background:#dcfce7}
+body.highContrast .stat{background:#000;color:#fff;border-color:#fff}
+body.highContrast .status{background:#000;color:#fff;border:1px solid #fff}
+@media(max-width:420px){.statsGrid{grid-template-columns:1fr 1fr}}
