@@ -86,3 +86,19 @@ button,label{touch-action:manipulation}
   margin-top:1rem;
 }
 .reminderItem h2{margin-top:0}
+
+.welcomeCard{
+  border-left:6px solid currentColor;
+}
+.welcomeCard ol{
+  padding-left:1.4rem;
+}
+.welcomeCard li{
+  margin:.65rem 0;
+}
+.quickActions{
+  display:grid;
+  gap:.8rem;
+  margin:1rem 0;
+}
+[hidden]{display:none !important}

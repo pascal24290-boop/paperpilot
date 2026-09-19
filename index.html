@@ -17,6 +17,18 @@
 
 <main>
 <section id="home" class="screen active" aria-labelledby="homeTitle">
+<section id="welcomeCard" class="welcomeCard card" aria-labelledby="welcomeTitle">
+  <h1 id="welcomeTitle">👋 Bienvenue dans PaperPilot</h1>
+  <p><strong>Je peux vous aider à comprendre vos documents, étape par étape.</strong></p>
+  <ol>
+    <li>📷 Photographiez un document ou choisissez un fichier.</li>
+    <li>🧠 PaperPilot le lit et repère les informations utiles.</li>
+    <li>🔊 Vous pouvez écouter ou poser une question.</li>
+  </ol>
+  <button id="startGuided" class="bigBtn">🎙️ Dis-moi quoi faire</button>
+  <button id="closeWelcome" class="outlineBtn">J’ai compris</button>
+</section>
+
   <h1 id="homeTitle">Bonjour 👋</h1>
   <p class="intro">Photographiez un document et PaperPilot vous aide à comprendre l’essentiel.</p>
 
@@ -24,7 +36,11 @@
     <h2>📷 Analyser un document</h2>
     <p>Photo ou image depuis votre téléphone.</p>
     <label class="bigBtn" for="fileInput">Choisir une image</label>
-    <input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
+    <div class="quickActions" aria-label="Actions principales">
+  <button id="quickPhoto" class="bigBtn">📷 Photographier un document</button>
+  <button id="quickFile" class="bigBtn">📁 Choisir un document</button>
+</div>
+<input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
   </div>
 
   <button id="voiceTest" class="bigBtn secondary">🔊 Tester la lecture vocale</button>

@@ -9,6 +9,25 @@ $("saveCurrent")?.addEventListener("click",()=>{ if(typeof saveResult==="functio
 $("prepareReminder")?.addEventListener("click",prepareReminder);
 $("openReminders")?.addEventListener("click",()=>{renderReminders();showScreen("reminders");});
 $("backFromReminders")?.addEventListener("click",()=>showScreen("home"));
+
+function guidedWelcome(){
+  const text="Bienvenue dans PaperPilot. Pour commencer, photographiez un document ou choisissez un fichier. Je vais essayer de le lire, repérer les dates et les montants, puis vous pourrez écouter le résultat ou poser une question.";
+  if(typeof speak==="function") speak(text);
+}
+function hideWelcome(){
+  const card=$("welcomeCard");
+  if(card) card.hidden=true;
+  try{localStorage.setItem("paperpilot-welcome-seen","1");}catch(e){}
+}
+function initWelcome(){
+  const seen=localStorage.getItem("paperpilot-welcome-seen")==="1";
+  const card=$("welcomeCard");
+  if(card && seen) card.hidden=true;
+  $("startGuided")?.addEventListener("click",guidedWelcome);
+  $("closeWelcome")?.addEventListener("click",hideWelcome);
+  $("quickPhoto")?.addEventListener("click",()=>{ $("fileInput")?.click(); });
+  $("quickFile")?.addEventListener("click",()=>{ $("fileInput")?.click(); });
+}
 $("openAccess").onclick=()=>showScreen("access");$("openPrivacy").onclick=()=>showScreen("privacy");$("backFromPrivacy").onclick=()=>showScreen("home");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
 function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
 function guidedText(){
@@ -310,3 +329,5 @@ function setPref(key,value){localStorage.setItem(key,value?"1":"0")}
 $("largeText").checked=localStorage.getItem("paperpilot-large")==="1";$("highContrast").checked=localStorage.getItem("paperpilot-contrast")==="1";$("autoSpeak").checked=localStorage.getItem("paperpilot-autoSpeak")==="1";
 function applyAccess(){document.body.classList.toggle("largeText",$("largeText").checked);document.body.classList.toggle("highContrast",$("highContrast").checked)}
 $("largeText").onchange=()=>{setPref("paperpilot-large",$("largeText").checked);applyAccess()};$("highContrast").onchange=()=>{setPref("paperpilot-contrast",$("highContrast").checked);applyAccess()};$("autoSpeak").onchange=()=>setPref("paperpilot-autoSpeak",$("autoSpeak").checked);applyAccess();
+
+initWelcome();
