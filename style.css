@@ -199,3 +199,18 @@ button,label{touch-action:manipulation}
   transition:none !important;
   scroll-behavior:auto !important;
 }
+
+.libraryTools select{
+  width:100%;
+  min-height:48px;
+  font-size:1.05rem;
+  padding:.7rem;
+  border:2px solid currentColor;
+  border-radius:12px;
+  background:transparent;
+}
+.categoryTag{
+  display:inline-block;
+  font-weight:800;
+  margin:.1rem 0 .5rem;
+}

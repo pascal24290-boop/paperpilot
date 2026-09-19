@@ -6,6 +6,7 @@ function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
 
 $("savedSearch")?.addEventListener("input",renderSaved);
+$("categoryFilter")?.addEventListener("change",renderSaved);
 $("saveCurrent")?.addEventListener("click",()=>{ if(typeof saveResult==="function") saveResult(); });
 $("prepareReminder")?.addEventListener("click",prepareReminder);
 $("openReminders")?.addEventListener("click",()=>{renderReminders();showScreen("reminders");});
@@ -543,6 +544,24 @@ function initPreferences(){
   if(reduce){reduce.checked=!!prefs.reduceMotion;reduce.onchange=()=>{const p={...loadPreferences(),reduceMotion:reduce.checked};savePreferences(p);applyPreferences();};}
   if(upcoming){upcoming.checked=!!prefs.showUpcoming;upcoming.onchange=()=>savePreferences({...loadPreferences(),showUpcoming:upcoming.checked});}
 }
+
+function getDocumentCategory(doc){
+  const raw=((doc.type||"")+" "+(doc.text||"")+" "+(doc.plain||"")).toLowerCase();
+  if(/facture|à payer|montant dû|total ttc/.test(raw)) return "facture";
+  if(/assurance|assuré|sinistre|prime d’assurance/.test(raw)) return "assurance";
+  if(/contrat|conditions générales|résiliation/.test(raw)) return "contrat";
+  if(/iban|rib|relevé bancaire|virement|prélèvement|compte bancaire/.test(raw)) return "banque";
+  if(/ordonnance|prescription|médecin|patient|pharmacie|traitement/.test(raw)) return "sante";
+  if(/impôt|taxe|déclaration|administration|avis d’imposition/.test(raw)) return "administration";
+  if(/madame|monsieur|objet\s*:|cordialement|lettre/.test(raw)) return "courrier";
+  return "autre";
+}
+function categoryLabel(cat){
+  return ({
+    facture:"Facture",assurance:"Assurance",contrat:"Contrat",banque:"Banque",
+    sante:"Santé",administration:"Administration",courrier:"Courrier",autre:"Autre"
+  })[cat] || "Autre";
+}
 function loadSavedDocs(){
   try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
   catch(e){ return []; }
@@ -587,9 +606,11 @@ function renderSaved(){
   if(!list) return;
   const docs=loadSavedDocs();
   const query=($("savedSearch")?.value || "").trim().toLowerCase();
+  const category=$("categoryFilter")?.value || "all";
   const filtered=docs.map((doc,index)=>({doc,index})).filter(({doc})=>{
+    if(category!=="all" && getDocumentCategory(doc)!==category) return false;
     if(!query) return true;
-    const hay=[docLabel(doc),doc.type,docSummary(doc),...(doc.dates||[]),...(doc.amountsToPay||[])].join(" ").toLowerCase();
+    const hay=[docLabel(doc),doc.type,docSummary(doc),...(doc.dates||[]),...(doc.amountsToPay||[]),categoryLabel(getDocumentCategory(doc))].join(" ").toLowerCase();
     return hay.includes(query);
   });
   $("savedCount").textContent = `${filtered.length} document${filtered.length>1?"s":""} affiché${filtered.length>1?"s":""} sur ${docs.length}`;
@@ -598,9 +619,11 @@ function renderSaved(){
     return;
   }
   list.innerHTML=filtered.map(({doc,index})=>{
+    const cat=getDocumentCategory(doc);
     const dates=(doc.dates||[]).slice(0,3).map(d=>`<li>📅 ${escapeHTML(d)}</li>`).join("");
     const amounts=(doc.amountsToPay||[]).slice(0,2).map(a=>`<li>💶 ${escapeHTML(a)}</li>`).join("");
     return `<article class="card savedDoc">
+      <p class="categoryTag">🏷️ ${escapeHTML(categoryLabel(cat))}</p>
       <h2>${escapeHTML(docLabel(doc))}</h2>
       <p>${escapeHTML(docSummary(doc))}</p>
       ${dates?`<ul>${dates}</ul>`:""}
