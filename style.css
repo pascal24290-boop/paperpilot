@@ -117,3 +117,13 @@ button,label{touch-action:manipulation}
 @media (max-width:520px){
   .speechButtons{grid-template-columns:1fr}
 }
+
+.interpretationCard{border-left:6px solid currentColor}
+.verificationNotice{
+  font-weight:700;
+  margin-top:1rem;
+}
+.noticeText{
+  border-radius:12px;
+  padding:.8rem;
+}

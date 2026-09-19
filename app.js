@@ -122,12 +122,14 @@ function stopSpeech(){
 
 function guidedText(){
   const r=lastResult||{};
+  const interpretation=buildInterpretation(r.text||"",r.dates||[],r.amountsToPay||[],r.actions||[]);
   return [
-    r.type ? `Type de document : ${r.type}.` : "",
-    r.amountsToPay?.length ? `Montants à payer : ${r.amountsToPay.join(", ")}.` : "",
-    r.dates?.length ? `Dates détectées : ${r.dates.join(", ")}.` : "",
+    `Type de document : ${interpretation.type}.`,
+    interpretation.amountMeaning,
+    interpretation.dateMeaning,
     r.actions?.length ? `À faire : ${r.actions.join(". ")}.` : "",
-    r.plain ? `En clair : ${r.plain}` : ""
+    r.plain ? `En clair : ${r.plain}` : "",
+    "Vérifiez toujours le document original."
   ].filter(Boolean).join(" ");
 }
 $("guidedRead").onclick=()=>speak(guidedText());
@@ -230,6 +232,50 @@ if(SpeechRecognition){
 
 
 
+
+function buildInterpretation(text, dates, amounts, actions){
+  const t=String(text||"").toLowerCase();
+  let type="courrier";
+  const rules=[
+    ["facture",/(facture|à payer|montant dû|total ttc|échéance)/],
+    ["assurance",/(assurance|assuré|sinistre|prime|contrat d’assurance)/],
+    ["contrat",/(contrat|conditions générales|résiliation|engagement)/],
+    ["banque",/(relevé bancaire|iban|virement|prélèvement|solde|compte bancaire)/],
+    ["impôts / administration",/(impôt|taxe|déclaration|administration|service public|avis d’imposition)/],
+    ["santé",/(ordonnance|prescription|médecin|patient|pharmacie|traitement)/],
+    ["lettre / courrier",/(madame|monsieur|objet\s*:|cordialement|lettre)/]
+  ];
+  for(const [name,rx] of rules){ if(rx.test(t)){ type=name; break; } }
+
+  const paymentWords=/(à payer|reste à payer|montant dû|total à régler|payer avant|règlement)/;
+  const paidWords=/(déjà payé|payé le|paiement reçu|acquitté|réglé le)/;
+  const payContext=paymentWords.test(t);
+  const paidContext=paidWords.test(t);
+
+  let amountMeaning="Montant détecté, contexte à vérifier.";
+  if(payContext) amountMeaning="Un montant semble correspondre à une somme à payer.";
+  else if(paidContext) amountMeaning="Un montant semble correspondre à une somme déjà payée.";
+
+  let dateMeaning="Date détectée, contexte à vérifier.";
+  if(/(avant le|au plus tard|échéance|date limite|à régler avant)/.test(t))
+    dateMeaning="Une date semble correspondre à une échéance ou une date limite.";
+  else if(/(du|le|en date du|émis le|daté du)/.test(t))
+    dateMeaning="Une date semble être une date du document, pas forcément une échéance.";
+
+  const confidenceParts=[];
+  if(type!=="courrier") confidenceParts.push("type");
+  if(amounts?.length) confidenceParts.push("montant");
+  if(dates?.length) confidenceParts.push("date");
+  if(actions?.length) confidenceParts.push("action");
+
+  return {
+    type,
+    summary:`Ce document ressemble à ${type}. ${confidenceParts.length?`PaperPilot a repéré ${confidenceParts.length} catégorie(s) d’information utile.`:"Peu d’éléments structurés ont été détectés."}`,
+    amountMeaning,
+    dateMeaning,
+    caution:"Les catégories et associations sont automatiques. Vérifiez toujours le document original avant toute décision ou paiement."
+  };
+}
 function confidenceMessage(text,dates,amounts,actions){
   let score=0;
   if(text.length>80) score++;
@@ -246,7 +292,12 @@ if(importantDates.length) important.push("Une date semble liée à une échéanc
 if(amountInfo.pay.length) important.push("Un montant semble correspondre à une somme à payer : "+amountInfo.pay[0]+".");
 important.push(actions[0]);
 lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,amountsToPay:amountInfo.pay,actions,important,text};
-$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);updateDeadlineCard();$("reminderStatus").textContent="";
+$("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);
+const interpretation=buildInterpretation(text,dates,amounts,actions);
+$("interpretationSummary").textContent=interpretation.summary;
+$("interpretationDetails").innerHTML=`<p><strong>🧾 Type :</strong> ${escapeHTML(interpretation.type)}</p><p><strong>💶 Montants :</strong> ${escapeHTML(interpretation.amountMeaning)}</p><p><strong>📅 Dates :</strong> ${escapeHTML(interpretation.dateMeaning)}</p>`;
+$("verificationNotice").textContent="⚠️ "+interpretation.caution;
+updateDeadlineCard();$("reminderStatus").textContent="";
 $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
 $("importantBlock").innerHTML=`<div class="importantBox"><strong>⚠️ Points importants</strong><ul>${important.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
 $("datesBlock").innerHTML=block("📅 Dates",dates);
