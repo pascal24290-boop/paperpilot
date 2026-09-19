@@ -1,9 +1,1 @@
-{
-  "name":"PaperPilot",
-  "short_name":"PaperPilot",
-  "start_url":".",
-  "display":"standalone",
-  "background_color":"#f4f6fa",
-  "theme_color":"#0b1020",
-  "lang":"fr"
-}
+{"name":"PaperPilot","short_name":"PaperPilot","start_url":".","display":"standalone","background_color":"#f4f6fa","theme_color":"#0b1020","lang":"fr"}

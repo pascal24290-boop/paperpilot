@@ -1,20 +1,17 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
-  <meta name="description" content="PaperPilot - comprendre ses documents simplement">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
-  <title>PaperPilot</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="description" content="PaperPilot - comprendre ses documents simplement">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=5">
+<title>PaperPilot V5</title>
 </head>
 <body>
 <header class="topbar">
-  <div>
-    <div class="brand">PaperPilot</div>
-    <div class="tagline">Vos documents. Compris. Simplifiés.</div>
-  </div>
+  <div><div class="brand">PaperPilot</div><div class="tagline">Vos documents. Compris. Simplifiés.</div></div>
   <button id="speakWelcome" class="iconBtn" aria-label="Écouter l'accueil">🔊</button>
 </header>
 
@@ -38,90 +35,71 @@
     <button id="openAccess" class="outlineBtn">Ouvrir les réglages</button>
   </div>
 
-  <div class="notice">
-    <strong>Confidentialité</strong>
-    <p>Dans cette version, la lecture du texte se fait dans votre navigateur. Pour les tests, utilisez de préférence des documents non sensibles.</p>
-  </div>
+  <div class="notice"><strong>Confidentialité</strong><p>Le texte est analysé dans votre navigateur dans cette version. Pour les tests, utilisez de préférence des documents non sensibles.</p></div>
 </section>
 
 <section id="loading" class="screen" aria-live="polite">
-  <div class="loaderCard">
-    <div class="spinner" aria-hidden="true">⏳</div>
-    <h2>Analyse en cours…</h2>
-    <p id="progressText">Préparation de la lecture…</p>
-    <div class="progress"><div id="progressBar"></div></div>
-  </div>
+  <div class="loaderCard"><div class="spinner">⏳</div><h2>Analyse en cours…</h2><p id="progressText">Préparation…</p><div class="progress"><div id="progressBar"></div></div></div>
 </section>
 
 <section id="result" class="screen" aria-labelledby="resultTitle">
   <button id="backHome" class="backBtn">← Retour</button>
-  <div class="resultHeader">
-    <span class="badge">ANALYSE TERMINÉE</span>
-    <h1 id="resultTitle">Document</h1>
-  </div>
+  <div class="resultHeader"><span class="badge">ANALYSE TERMINÉE</span><h1 id="resultTitle">Document</h1></div>
 
   <div class="card highlight">
-    <h2>💡 En clair</h2>
-    <p id="plainSummary"></p>
+    <h2>💡 En clair</h2><p id="plainSummary"></p>
+  </div>
+
+  <div class="card">
+    <h2>🤖 Assistant PaperPilot</h2>
+    <p>Posez une question rapide sur ce document.</p>
+    <div class="questionGrid">
+      <button class="questionBtn" data-q="what">❓ C'est quoi ?</button>
+      <button class="questionBtn" data-q="todo">✅ Que dois-je faire ?</button>
+      <button class="questionBtn" data-q="money">💶 Combien ?</button>
+      <button class="questionBtn" data-q="date">📅 Pour quand ?</button>
+    </div>
+    <div id="assistantAnswer" class="assistantAnswer" aria-live="polite">Choisissez une question.</div>
+    <button id="speakAnswer" class="outlineBtn">🔊 Écouter la réponse</button>
   </div>
 
   <div class="card">
     <h2>📄 Ce que j’ai trouvé</h2>
-    <p id="docType"></p>
-    <div id="datesBlock"></div>
-    <div id="amountsBlock"></div>
-    <div id="actionsBlock"></div>
+    <p id="docType"></p><div id="datesBlock"></div><div id="amountsBlock"></div><div id="actionsBlock"></div>
   </div>
 
   <div class="card">
     <h2>🔊 Écouter l’explication</h2>
-    <div class="row">
-      <button id="speakResult" class="bigBtn">▶️ Écouter</button>
-      <button id="stopSpeech" class="outlineBtn">⏹ Stop</button>
-    </div>
+    <div class="row"><button id="speakResult" class="bigBtn">▶️ Écouter</button><button id="stopSpeech" class="outlineBtn">⏹ Stop</button></div>
   </div>
 
-  <details class="card">
-    <summary>Texte reconnu</summary>
-    <pre id="rawText"></pre>
-  </details>
-
-  <div class="notice">
-    <strong>ℹ️ À savoir</strong>
-    <p>Cette explication est basée sur le texte reconnu automatiquement. Vérifiez toujours le document original avant de prendre une décision ou d’effectuer un paiement.</p>
-  </div>
-
+  <details class="card"><summary>Texte reconnu</summary><pre id="rawText"></pre></details>
+  <div class="notice"><strong>ℹ️ À savoir</strong><p>Les informations sont extraites automatiquement. Vérifiez toujours le document original avant une décision, une signature ou un paiement.</p></div>
   <button id="saveResult" class="bigBtn secondary">💾 Enregistrer sur cet appareil</button>
 </section>
 
 <section id="saved" class="screen" aria-labelledby="savedTitle">
-  <h1 id="savedTitle">Mes documents</h1>
-  <div id="savedList"></div>
+  <h1 id="savedTitle">Mes documents</h1><div id="savedList"></div>
   <button id="clearSaved" class="outlineBtn">Supprimer les enregistrements locaux</button>
 </section>
 
 <section id="access" class="screen" aria-labelledby="accessTitle">
-  <button id="backFromAccess" class="backBtn">← Retour</button>
-  <h1 id="accessTitle">Accessibilité</h1>
+  <button id="backFromAccess" class="backBtn">← Retour</button><h1 id="accessTitle">Accessibilité</h1>
   <div class="card">
     <label class="toggleRow"><span>Texte agrandi</span><input id="largeText" type="checkbox"></label>
     <label class="toggleRow"><span>Contraste renforcé</span><input id="highContrast" type="checkbox"></label>
     <label class="toggleRow"><span>Lire automatiquement les résultats</span><input id="autoSpeak" type="checkbox"></label>
   </div>
-  <div class="card">
-    <h2>Compatibilité</h2>
-    <p>Les boutons et zones importantes utilisent des libellés lisibles par VoiceOver sur iPhone et TalkBack sur Android.</p>
-  </div>
+  <div class="card"><h2>Compatibilité</h2><p>Les boutons importants ont des libellés compatibles avec VoiceOver sur iPhone et TalkBack sur Android.</p></div>
 </section>
 </main>
 
 <nav class="bottomNav" aria-label="Navigation principale">
-  <button data-screen="home">🏠<span>Accueil</span></button>
-  <button data-screen="saved">📁<span>Documents</span></button>
-  <button data-screen="access">♿<span>Accessibilité</span></button>
+<button data-screen="home">🏠<span>Accueil</span></button>
+<button data-screen="saved">📁<span>Documents</span></button>
+<button data-screen="access">♿<span>Accessibilité</span></button>
 </nav>
-
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
