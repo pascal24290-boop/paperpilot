@@ -40,6 +40,15 @@
   <strong>♿ Lecture accessible</strong>
   <p>Les boutons principaux sont utilisables avec VoiceOver et TalkBack. Vous pouvez écouter les résultats, mettre la lecture en pause et régler sa vitesse.</p>
 </div>
+<div id="photoTips" class="card photoTips">
+  <h2>📷 Pour une meilleure lecture</h2>
+  <ul>
+    <li>Placez le document à plat.</li>
+    <li>Évitez les ombres et les reflets.</li>
+    <li>Cadrez toute la page si possible.</li>
+    <li>Si le résultat semble étrange, relancez la lecture.</li>
+  </ul>
+</div>
 <div class="quickActions" aria-label="Actions principales">
   <button id="quickPhoto" class="bigBtn">📷 Photographier un document</button>
   <button id="quickFile" class="bigBtn">📁 Choisir un document</button>
@@ -95,6 +104,14 @@
     <button id="speakAnswer" class="outlineBtn">🔊 Écouter la réponse</button>
   </div>
 
+  <div id="ocrQualityCard" class="card ocrQualityCard" aria-labelledby="ocrQualityTitle">
+    <h2 id="ocrQualityTitle">🔎 Qualité de lecture</h2>
+    <p id="ocrQualityText" aria-live="polite">La qualité de la lecture sera indiquée après l’analyse.</p>
+    <div class="ocrActions">
+      <button id="retryDocument" class="bigBtn">🔄 Relire le document</button>
+      <button id="chooseAnother" class="outlineBtn">📷 Choisir une autre photo</button>
+    </div>
+  </div>
   <div id="interpretationCard" class="card interpretationCard" aria-labelledby="interpretationTitle">
     <h2 id="interpretationTitle">🧠 Compréhension</h2>
     <p id="interpretationSummary"></p>

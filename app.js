@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id);
 let lastResult=null,lastAnswer="";
+let lastFile = null;
 const screens=["home","loading","result","saved","reminders","privacy","access"];
 function showScreen(name){screens.forEach(s=>$(s).classList.toggle("active",s===name));window.scrollTo({top:0,behavior:"smooth"});if(name==="saved")renderSaved();}
 document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
@@ -18,6 +19,19 @@ function readFullText(){
     return;
   }
   speak("Lecture du texte complet. " + text);
+}
+
+function retryDocument(){
+  if(lastFile && typeof analyze==="function"){
+    showScreen("loading");
+    analyze(lastFile);
+  }else{
+    $("fileInput")?.click();
+  }
+}
+function initOCRQualityControls(){
+  $("retryDocument")?.addEventListener("click",retryDocument);
+  $("chooseAnother")?.addEventListener("click",()=>{$("fileInput")?.click();});
 }
 function initSpeechControls(){
   $("pauseSpeech")?.addEventListener("click",pauseSpeech);
@@ -233,6 +247,30 @@ if(SpeechRecognition){
 
 
 
+
+function assessOCRQuality(text, ocrConfidence){
+  const clean=String(text||"").replace(/\s+/g," ").trim();
+  const length=clean.length;
+  const weird=(clean.match(/[�]/g)||[]).length;
+  const words=clean?clean.split(/\s+/).length:0;
+  let level="low";
+  let message="Peu de texte lisible a été détecté. Essayez une photo plus nette, mieux cadrée et mieux éclairée.";
+  if(length>=500 && weird<5){
+    level="good";
+    message="La quantité de texte détectée semble correcte. Vérifiez quand même les informations importantes sur l’original.";
+  } else if(length>=120 && words>=20){
+    level="medium";
+    message="Une partie du texte semble lisible, mais certains éléments peuvent manquer ou être mal reconnus. Vérifiez l’original.";
+  }
+  if(typeof ocrConfidence==="number" && ocrConfidence<45){
+    level="low";
+    message="La lecture automatique semble difficile. Reprenez une photo plus nette, mieux éclairée et bien cadrée.";
+  } else if(typeof ocrConfidence==="number" && ocrConfidence<65 && level==="good"){
+    level="medium";
+    message="La lecture semble exploitable, mais certains mots peuvent être incertains. Vérifiez les informations importantes.";
+  }
+  return {level,message,length,words,ocrConfidence};
+}
 function buildInterpretation(text, dates, amounts, actions){
   const t=String(text||"").toLowerCase();
   let type="courrier";
@@ -293,6 +331,13 @@ if(amountInfo.pay.length) important.push("Un montant semble correspondre à une 
 important.push(actions[0]);
 lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,amountsToPay:amountInfo.pay,actions,important,text};
 $("resultTitle").textContent=type;$("resultTitle").setAttribute("tabindex","-1");$("plainSummary").textContent=lastResult.plain;$("confidenceText").textContent=confidenceMessage(text,dates,amounts,actions);
+const ocrConfidence = (typeof data !== "undefined" && data?.confidence!=null) ? Number(data.confidence) : null;
+const ocrQuality=assessOCRQuality(text,ocrConfidence);
+$("ocrQualityText").textContent=ocrQuality.message;
+$("ocrQualityCard").dataset.level=ocrQuality.level;
+if(ocrQuality.level==="low") $("ocrQualityCard").classList.add("ocrWarning");
+else $("ocrQualityCard").classList.remove("ocrWarning");
+
 const interpretation=buildInterpretation(text,dates,amounts,actions);
 $("interpretationSummary").textContent=interpretation.summary;
 $("interpretationDetails").innerHTML=`<p><strong>🧾 Type :</strong> ${escapeHTML(interpretation.type)}</p><p><strong>💶 Montants :</strong> ${escapeHTML(interpretation.amountMeaning)}</p><p><strong>📅 Dates :</strong> ${escapeHTML(interpretation.dateMeaning)}</p>`;
@@ -476,3 +521,5 @@ $("largeText").onchange=()=>{setPref("paperpilot-large",$("largeText").checked);
 initWelcome();
 
 initSpeechControls();
+
+initOCRQualityControls();

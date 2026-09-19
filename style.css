@@ -127,3 +127,11 @@ button,label{touch-action:manipulation}
   border-radius:12px;
   padding:.8rem;
 }
+
+.ocrQualityCard{border-left:6px solid currentColor}
+.ocrQualityCard[data-level="good"]{border-left-width:6px}
+.ocrQualityCard[data-level="medium"]{border-left-style:dashed}
+.ocrQualityCard[data-level="low"]{border-left-style:double}
+.ocrActions{display:grid;gap:.7rem;margin-top:1rem}
+.photoTips{border-left:6px solid currentColor}
+.photoTips li{margin:.55rem 0}
