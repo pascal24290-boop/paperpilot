@@ -271,6 +271,33 @@ function assessOCRQuality(text, ocrConfidence){
   }
   return {level,message,length,words,ocrConfidence};
 }
+
+function buildVerificationList(text, dates, amounts, actions){
+  const t=String(text||"").toLowerCase();
+  const checks=[];
+  if(amounts?.length || /(payer|montant|prix|total|facture|somme)/.test(t))
+    checks.push("Vérifiez le montant exact et la devise sur le document original.");
+  if(dates?.length || /(échéance|avant le|date limite|rendez-vous)/.test(t))
+    checks.push("Vérifiez la date et assurez-vous qu’il s’agit bien de l’échéance ou de la date attendue.");
+  if(actions?.length || /(répondre|envoyer|signer|payer|contacter|joindre)/.test(t))
+    checks.push("Vérifiez l’action demandée avant de répondre, signer ou envoyer un document.");
+  if(/(iban|rib|compte bancaire|carte|coordonnées bancaires|prélèvement)/.test(t))
+    checks.push("Vérifiez soigneusement les coordonnées bancaires avant tout paiement.");
+  if(/(mot de passe|code|identifiant|numéro de sécurité|confidentiel)/.test(t))
+    checks.push("Ne partagez pas de code, mot de passe ou information confidentielle sans vérifier le destinataire.");
+  if(/(ordonnance|prescription|médicament|traitement)/.test(t))
+    checks.push("Pour une information de santé, vérifiez toujours l’original et demandez confirmation à un professionnel si nécessaire.");
+  if(!checks.length)
+    checks.push("Vérifiez les informations importantes sur le document original avant d’agir.");
+  return [...new Set(checks)];
+}
+function renderVerificationList(text,dates,amounts,actions){
+  const list=$("checkList");
+  if(!list) return;
+  const checks=buildVerificationList(text,dates,amounts,actions);
+  list.innerHTML=checks.map(x=>`<li>${escapeHTML(x)}</li>`).join("");
+  $("readChecks")?.setAttribute("data-checks",checks.join(" "));
+}
 function buildInterpretation(text, dates, amounts, actions){
   const t=String(text||"").toLowerCase();
   let type="courrier";
@@ -342,6 +369,7 @@ const interpretation=buildInterpretation(text,dates,amounts,actions);
 $("interpretationSummary").textContent=interpretation.summary;
 $("interpretationDetails").innerHTML=`<p><strong>🧾 Type :</strong> ${escapeHTML(interpretation.type)}</p><p><strong>💶 Montants :</strong> ${escapeHTML(interpretation.amountMeaning)}</p><p><strong>📅 Dates :</strong> ${escapeHTML(interpretation.dateMeaning)}</p>`;
 $("verificationNotice").textContent="⚠️ "+interpretation.caution;
+renderVerificationList(text,dates,amounts,actions);
 updateDeadlineCard();$("reminderStatus").textContent="";
 $("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;
 $("importantBlock").innerHTML=`<div class="importantBox"><strong>⚠️ Points importants</strong><ul>${important.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
@@ -523,3 +551,5 @@ initWelcome();
 initSpeechControls();
 
 initOCRQualityControls();
+
+initSafetyControls();

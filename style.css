@@ -135,3 +135,10 @@ button,label{touch-action:manipulation}
 .ocrActions{display:grid;gap:.7rem;margin-top:1rem}
 .photoTips{border-left:6px solid currentColor}
 .photoTips li{margin:.55rem 0}
+
+.checkCard{
+  border-left:6px solid currentColor;
+}
+.checkCard li{
+  margin:.7rem 0;
+}
