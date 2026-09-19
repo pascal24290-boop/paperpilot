@@ -65,6 +65,7 @@
     <button id="openPrivacy" class="outlineBtn">🔐 Confidentialité</button>
     <button id="openReminders" class="outlineBtn">🔔 Mes rappels</button>
     <button id="openDashboardOverview" class="outlineBtn">📊 Vue du jour</button>
+    <button id="openPreferences" class="outlineBtn">⚙️ Mes préférences</button>
   </div>
   <button id="quickRead" class="bigBtn secondary">🔊 Lecture rapide</button>
 
@@ -205,6 +206,39 @@
   <div class="card">
     <p id="reminderCount" class="muted"></p>
     <div id="reminderList"></div>
+  </div>
+</section>
+
+<section id="preferences" class="screen" aria-labelledby="preferencesTitle">
+  <button id="backFromPreferences" class="backBtn">← Retour</button>
+  <h1 id="preferencesTitle">⚙️ Mes préférences</h1>
+  <div class="card">
+    <h2>🔊 Lecture</h2>
+    <label for="prefSpeechRate"><strong>Vitesse de lecture</strong></label>
+    <input id="prefSpeechRate" type="range" min="0.6" max="1.4" step="0.1" value="0.9">
+    <p id="prefSpeechRateValue" class="muted">0,9×</p>
+  </div>
+  <div class="card">
+    <h2>📝 Explications</h2>
+    <label for="detailLevel"><strong>Niveau de détail</strong></label>
+    <select id="detailLevel">
+      <option value="simple">Simple</option>
+      <option value="standard">Standard</option>
+      <option value="detail">Détaillé</option>
+    </select>
+  </div>
+  <div class="card">
+    <h2>♿ Accessibilité</h2>
+    <label class="prefCheck"><input id="largeControls" type="checkbox"> Utiliser des boutons encore plus grands</label>
+    <label class="prefCheck"><input id="reduceMotion" type="checkbox"> Réduire les animations</label>
+  </div>
+  <div class="card">
+    <h2>📅 Échéances</h2>
+    <label class="prefCheck"><input id="showUpcoming" type="checkbox" checked> Mettre les prochaines échéances en évidence</label>
+  </div>
+  <div class="notice">
+    <strong>🔐 Vos préférences restent sur cet appareil.</strong>
+    <p>PaperPilot V20 les enregistre localement dans votre navigateur.</p>
   </div>
 </section>
 

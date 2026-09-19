@@ -164,3 +164,38 @@ button,label{touch-action:manipulation}
   .dashboardGrid{grid-template-columns:1fr}
   .dashboardWide{grid-column:auto}
 }
+
+#detailLevel{
+  width:100%;
+  min-height:48px;
+  font-size:1.05rem;
+  padding:.7rem;
+  border:2px solid currentColor;
+  border-radius:12px;
+  background:transparent;
+}
+.prefCheck{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  margin:.9rem 0;
+  font-weight:700;
+}
+.prefCheck input{
+  width:28px;
+  height:28px;
+}
+.large-controls button,
+.large-controls .bigBtn,
+.large-controls .outlineBtn,
+.large-controls .dangerBtn{
+  min-height:64px;
+  font-size:1.08rem;
+}
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after{
+  animation:none !important;
+  transition:none !important;
+  scroll-behavior:auto !important;
+}

@@ -513,6 +513,36 @@ function readDashboardOverview(){
   ];
   speak(parts.join(" "));
 }
+
+const defaultPreferences={speechRate:0.9,detailLevel:"simple",largeControls:false,reduceMotion:false,showUpcoming:true};
+function loadPreferences(){
+  try{return {...defaultPreferences,...JSON.parse(localStorage.getItem("paperpilot-preferences")||"{}")};}
+  catch(e){return {...defaultPreferences};}
+}
+function savePreferences(prefs){
+  localStorage.setItem("paperpilot-preferences",JSON.stringify(prefs));
+}
+function applyPreferences(){
+  const prefs=loadPreferences();
+  speechRate=Number(prefs.speechRate)||0.9;
+  document.documentElement.classList.toggle("large-controls",!!prefs.largeControls);
+  document.documentElement.classList.toggle("reduce-motion",!!prefs.reduceMotion);
+}
+function initPreferences(){
+  const prefs=loadPreferences();
+  const rate=$("prefSpeechRate");
+  const rateValue=$("prefSpeechRateValue");
+  const detail=$("detailLevel");
+  const large=$("largeControls");
+  const reduce=$("reduceMotion");
+  const upcoming=$("showUpcoming");
+  if(rate){rate.value=prefs.speechRate;rate.oninput=()=>{speechRate=Number(rate.value);rateValue.textContent=speechRate.toFixed(1).replace(".",",")+"×";savePreferences({...loadPreferences(),speechRate});};}
+  if(rateValue) rateValue.textContent=Number(prefs.speechRate).toFixed(1).replace(".",",")+"×";
+  if(detail){detail.value=prefs.detailLevel;detail.onchange=()=>savePreferences({...loadPreferences(),detailLevel:detail.value});}
+  if(large){large.checked=!!prefs.largeControls;large.onchange=()=>{const p={...loadPreferences(),largeControls:large.checked};savePreferences(p);applyPreferences();};}
+  if(reduce){reduce.checked=!!prefs.reduceMotion;reduce.onchange=()=>{const p={...loadPreferences(),reduceMotion:reduce.checked};savePreferences(p);applyPreferences();};}
+  if(upcoming){upcoming.checked=!!prefs.showUpcoming;upcoming.onchange=()=>savePreferences({...loadPreferences(),showUpcoming:upcoming.checked});}
+}
 function loadSavedDocs(){
   try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
   catch(e){ return []; }
