@@ -59,7 +59,12 @@
       <button class="questionBtn" data-q="money">💶 Combien ?</button>
       <button class="questionBtn" data-q="date">📅 Pour quand ?</button>
     </div>
-    <div id="assistantAnswer" class="assistantAnswer" aria-live="polite">Choisissez une question.</div>
+    <div class="freeQuestion">
+      <label for="userQuestion"><strong>💬 Pose ta question</strong></label>
+      <textarea id="userQuestion" rows="3" placeholder="Ex. Est-ce que je dois payer ce document ?"></textarea>
+      <button id="askQuestion" class="bigBtn">🔎 Chercher dans le document</button>
+    </div>
+    <div id="assistantAnswer" class="assistantAnswer" aria-live="polite">Choisissez une question ou écrivez la vôtre.</div>
     <button id="speakAnswer" class="outlineBtn">🔊 Écouter la réponse</button>
   </div>
 

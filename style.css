@@ -17,6 +17,11 @@ h1{font-size:30px;margin:8px 0 12px}h2{font-size:21px;margin:0 0 8px}p{font-size
 ul{padding-left:22px;font-size:17px;line-height:1.55}pre{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.45}
 .questionGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .questionBtn{min-height:58px;border:2px solid #111827;border-radius:15px;background:#fff;font-size:16px;font-weight:700;padding:8px}
+
+.freeQuestion{margin-top:18px;padding-top:18px;border-top:1px solid #e5e7eb}
+.freeQuestion label{display:block;font-size:18px;margin-bottom:8px}
+.freeQuestion textarea{width:100%;resize:vertical;border:2px solid #111827;border-radius:14px;padding:13px;font:inherit;font-size:17px;line-height:1.4;background:#fff;color:#111827}
+body.highContrast .freeQuestion textarea{background:#000;color:#fff;border-color:#fff}
 .assistantAnswer{margin-top:14px;padding:16px;border-radius:15px;background:#eef2f7;font-size:18px;line-height:1.5;min-height:58px}
 .toggleRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 0;border-bottom:1px solid #e5e7eb;font-size:18px}.toggleRow:last-child{border-bottom:0}.toggleRow input{width:26px;height:26px}
 .progress{height:12px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:18px}.progress div{height:100%;width:0;background:#111827;transition:width .2s}.spinner{font-size:42px;text-align:center}.loaderCard{text-align:center}

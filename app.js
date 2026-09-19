@@ -18,6 +18,32 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","
 function answerFor(q){const r=lastResult;if(!r)return"Analysez d’abord un document.";if(q==="what")return`Ce document semble être : ${r.type.replace(/^.\s/,"")}. ${r.plain}`;if(q==="todo")return r.actions.join(" ");if(q==="money")return r.amounts.length?`J’ai trouvé : ${r.amounts.join(", ")}. Vérifiez le montant exact sur le document original.`:"Je n’ai pas détecté de montant automatiquement.";if(q==="date")return r.dates.length?`J’ai trouvé ces dates : ${r.dates.join(", ")}. Vérifiez laquelle correspond à l’échéance ou au rendez-vous.`:"Je n’ai pas détecté de date au format habituel.";return""}
 document.querySelectorAll(".questionBtn").forEach(b=>b.onclick=()=>{lastAnswer=answerFor(b.dataset.q);$("assistantAnswer").textContent=lastAnswer});
 $("speakAnswer").onclick=()=>speak(lastAnswer||"Choisissez une question.");
+function answerFreeQuestion(question){
+  const r=lastResult;
+  if(!r) return "Analysez d’abord un document.";
+  const q=question.toLowerCase().trim();
+  if(!q) return "Écrivez une question sur le document.";
+  if(/(quoi|quel type|c.?est quoi|nature|document)/.test(q)) return answerFor("what");
+  if(/(faire|dois|obligation|action|payer|paie|régler|signer|signature|répondre|envoyer|résilier)/.test(q)) return answerFor("todo");
+  if(/(combien|montant|prix|somme|€|euros?)/.test(q)) return answerFor("money");
+  if(/(quand|date|échéance|délai|avant le|jusqu.?au)/.test(q)) return answerFor("date");
+
+  const words=q.replace(/[^\p{L}\p{N}\s]/gu," ").split(/\s+/).filter(w=>w.length>=4);
+  const sentences=r.text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const hits=sentences.filter(s=>words.some(w=>s.toLowerCase().includes(w)));
+  if(hits.length){
+    return "J’ai trouvé ceci dans le texte du document : " + hits.slice(0,2).join(" ");
+  }
+  return "Je ne trouve pas de réponse certaine dans le texte reconnu. Essayez une question sur le type de document, une date, un montant ou une action à effectuer.";
+}
+$("askQuestion").onclick=()=>{
+  lastAnswer=answerFreeQuestion($("userQuestion").value);
+  $("assistantAnswer").textContent=lastAnswer;
+};
+$("userQuestion").addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter") $("askQuestion").click();
+});
+
 async function analyze(file){showScreen("loading");setProgress(8,"Préparation de la lecture…");try{if(!window.Tesseract)throw new Error("Le moteur OCR n’a pas pu être chargé. Vérifiez votre connexion internet.");const result=await Tesseract.recognize(file,"fra+eng",{logger:m=>{if(m.status==="recognizing text")setProgress(10+Math.round((m.progress||0)*75),"Lecture du document…")}});setProgress(90,"Compréhension des éléments importants…");const text=(result.data.text||"").trim();if(!text)throw new Error("Aucun texte lisible n’a été détecté. Essayez une photo plus nette et bien éclairée.");const type=detectType(text),dates=extractDates(text),amounts=extractAmounts(text),actions=detectActions(text);lastResult={id:Date.now(),title:type,plain:plainSummary(type,dates,amounts,actions),type,dates,amounts,actions,text};$("resultTitle").textContent=type;$("plainSummary").textContent=lastResult.plain;$("docType").innerHTML=`<strong>Type détecté :</strong> ${escapeHtml(type)}`;$("datesBlock").innerHTML=block("📅 Dates",dates);$("amountsBlock").innerHTML=block("💶 Montants",amounts);$("actionsBlock").innerHTML=block("✅ Actions à vérifier",actions);$("rawText").textContent=text;$("assistantAnswer").textContent="Choisissez une question.";lastAnswer="";setProgress(100,"Terminé.");showScreen("result");if(localStorage.getItem("paperpilot-autoSpeak")==="1")speak(lastResult.plain)}catch(e){alert(e.message||"Une erreur est survenue.");showScreen("home")}}
 $("fileInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)analyze(f);e.target.value=""});
 $("speakResult").onclick=()=>lastResult&&speak(lastResult.plain+" "+lastResult.actions.join(" "));$("stopSpeech").onclick=()=>speechSynthesis.cancel();
