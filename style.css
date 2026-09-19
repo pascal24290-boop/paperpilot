@@ -102,3 +102,18 @@ button,label{touch-action:manipulation}
   margin:1rem 0;
 }
 [hidden]{display:none !important}
+
+.speechControls{border-left:6px solid currentColor}
+.speechButtons{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.7rem;
+  margin-bottom:1rem;
+}
+.speechControls input[type="range"]{
+  width:100%;
+  min-height:44px;
+}
+@media (max-width:520px){
+  .speechButtons{grid-template-columns:1fr}
+}

@@ -36,7 +36,11 @@
     <h2>📷 Analyser un document</h2>
     <p>Photo ou image depuis votre téléphone.</p>
     <label class="bigBtn" for="fileInput">Choisir une image</label>
-    <div class="quickActions" aria-label="Actions principales">
+    <div id="accessibilityHint" class="notice">
+  <strong>♿ Lecture accessible</strong>
+  <p>Les boutons principaux sont utilisables avec VoiceOver et TalkBack. Vous pouvez écouter les résultats, mettre la lecture en pause et régler sa vitesse.</p>
+</div>
+<div class="quickActions" aria-label="Actions principales">
   <button id="quickPhoto" class="bigBtn">📷 Photographier un document</button>
   <button id="quickFile" class="bigBtn">📁 Choisir un document</button>
 </div>
@@ -96,6 +100,19 @@
     <p id="deadlineText">Aucune échéance détectée.</p>
     <button id="prepareReminder" class="bigBtn">🔔 Préparer un rappel</button>
     <p id="reminderStatus" class="muted" aria-live="polite"></p>
+  </div>
+  <div id="speechControls" class="card speechControls" aria-labelledby="speechTitle">
+    <h2 id="speechTitle">🔊 Lecture adaptée</h2>
+    <div class="speechButtons">
+      <button id="pauseSpeech" class="bigBtn">⏸️ Pause</button>
+      <button id="resumeSpeech" class="bigBtn">▶️ Reprendre</button>
+      <button id="stopSpeech" class="outlineBtn">⏹️ Arrêter</button>
+    </div>
+    <label for="speechRate"><strong>Vitesse de lecture</strong></label>
+    <input id="speechRate" type="range" min="0.6" max="1.4" step="0.1" value="0.9" aria-label="Vitesse de lecture">
+    <p id="speechRateValue" class="muted">0,9×</p>
+    <button id="detailRead" class="bigBtn">📖 Lire le texte complet</button>
+    <p id="speechStatus" class="muted" aria-live="polite"></p>
   </div>
   <div class="card confidenceCard">
     <h2>⚠️ Fiabilité</h2>

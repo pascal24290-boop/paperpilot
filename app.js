@@ -10,6 +10,30 @@ $("prepareReminder")?.addEventListener("click",prepareReminder);
 $("openReminders")?.addEventListener("click",()=>{renderReminders();showScreen("reminders");});
 $("backFromReminders")?.addEventListener("click",()=>showScreen("home"));
 
+
+function readFullText(){
+  const text=lastResult?.text || "";
+  if(!text.trim()){
+    updateSpeechStatus("Aucun texte complet n’est disponible pour ce document.");
+    return;
+  }
+  speak("Lecture du texte complet. " + text);
+}
+function initSpeechControls(){
+  $("pauseSpeech")?.addEventListener("click",pauseSpeech);
+  $("resumeSpeech")?.addEventListener("click",resumeSpeech);
+  $("stopSpeech")?.addEventListener("click",stopSpeech);
+  $("detailRead")?.addEventListener("click",readFullText);
+  $("speechRate")?.addEventListener("input",e=>{
+    speechRate=Number(e.target.value)||0.9;
+    $("speechRateValue").textContent=speechRate.toFixed(1).replace(".",",")+"×";
+    if(speechSynthesis.speaking){
+      speechSynthesis.cancel();
+      const remaining=speechQueue.slice(Math.max(0,speechIndex)).join(" ");
+      if(remaining) speak(remaining);
+    }
+  });
+}
 function guidedWelcome(){
   const text="Bienvenue dans PaperPilot. Pour commencer, photographiez un document ou choisissez un fichier. Je vais essayer de le lire, repérer les dates et les montants, puis vous pourrez écouter le résultat ou poser une question.";
   if(typeof speak==="function") speak(text);
@@ -29,14 +53,82 @@ function initWelcome(){
   $("quickFile")?.addEventListener("click",()=>{ $("fileInput")?.click(); });
 }
 $("openAccess").onclick=()=>showScreen("access");$("openPrivacy").onclick=()=>showScreen("privacy");$("backFromPrivacy").onclick=()=>showScreen("home");$("backFromAccess").onclick=()=>showScreen("home");$("backHome").onclick=()=>showScreen("home");
-function speak(text){if(!("speechSynthesis"in window)){alert("La lecture vocale n’est pas disponible.");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=.92;speechSynthesis.speak(u);}
+let speechRate = 0.9;
+let speechQueue = [];
+let speechIndex = 0;
+let speechCurrentText = "";
+
+function updateSpeechStatus(message){
+  const el=$("speechStatus");
+  if(el) el.textContent=message;
+}
+
+function speak(text){
+  if(!("speechSynthesis" in window)){
+    updateSpeechStatus("La lecture vocale n’est pas disponible dans ce navigateur.");
+    return;
+  }
+  speechSynthesis.cancel();
+  speechCurrentText=String(text||"").trim();
+  if(!speechCurrentText) return;
+  speechQueue=splitSpeechText(speechCurrentText);
+  speechIndex=0;
+  speakNextChunk();
+}
+
+function splitSpeechText(text){
+  const parts=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+  return parts.map(s=>s.trim()).filter(Boolean);
+}
+
+function speakNextChunk(){
+  if(!speechQueue.length || speechIndex>=speechQueue.length) {
+    updateSpeechStatus("Lecture terminée.");
+    return;
+  }
+  const utterance=new SpeechSynthesisUtterance(speechQueue[speechIndex]);
+  utterance.lang="fr-FR";
+  utterance.rate=speechRate;
+  utterance.pitch=1;
+  utterance.onstart=()=>updateSpeechStatus(`Lecture ${speechIndex+1} sur ${speechQueue.length}.`);
+  utterance.onend=()=>{
+    speechIndex++;
+    speakNextChunk();
+  };
+  utterance.onerror=()=>updateSpeechStatus("La lecture vocale a rencontré un problème.");
+  speechSynthesis.speak(utterance);
+}
+
+function pauseSpeech(){
+  if("speechSynthesis" in window && speechSynthesis.speaking){
+    speechSynthesis.pause();
+    updateSpeechStatus("Lecture en pause.");
+  }
+}
+function resumeSpeech(){
+  if("speechSynthesis" in window && speechSynthesis.paused){
+    speechSynthesis.resume();
+    updateSpeechStatus("Lecture reprise.");
+  }
+}
+function stopSpeech(){
+  if("speechSynthesis" in window){
+    speechSynthesis.cancel();
+    speechQueue=[];
+    speechIndex=0;
+    updateSpeechStatus("Lecture arrêtée.");
+  }
+}
+
 function guidedText(){
-  if(!lastResult) return "Aucun document n’est actuellement analysé.";
-  const type=lastResult.type.replace(/^.\s/,"");
-  const amount=lastResult.amountsToPay?.length?`Montant à payer : ${lastResult.amountsToPay.join(", ")}.`:"Aucun montant à payer clairement détecté.";
-  const date=lastResult.dates?.length?`Dates détectées : ${lastResult.dates.join(", ")}.`:"Aucune date détectée.";
-  const action=lastResult.actions?.length?`Action à vérifier : ${lastResult.actions.join(" ")}.`:"Aucune action détectée.";
-  return `Lecture guidée. Type de document : ${type}. ${amount} ${date} ${action} Explication : ${lastResult.plain}`;
+  const r=lastResult||{};
+  return [
+    r.type ? `Type de document : ${r.type}.` : "",
+    r.amountsToPay?.length ? `Montants à payer : ${r.amountsToPay.join(", ")}.` : "",
+    r.dates?.length ? `Dates détectées : ${r.dates.join(", ")}.` : "",
+    r.actions?.length ? `À faire : ${r.actions.join(". ")}.` : "",
+    r.plain ? `En clair : ${r.plain}` : ""
+  ].filter(Boolean).join(" ");
 }
 $("guidedRead").onclick=()=>speak(guidedText());
 $("quickRead").onclick=()=>speak("PaperPilot. " + (lastResult ? guidedText() : "Analysez un document pour pouvoir écouter son contenu."));
@@ -331,3 +423,5 @@ function applyAccess(){document.body.classList.toggle("largeText",$("largeText")
 $("largeText").onchange=()=>{setPref("paperpilot-large",$("largeText").checked);applyAccess()};$("highContrast").onchange=()=>{setPref("paperpilot-contrast",$("highContrast").checked);applyAccess()};$("autoSpeak").onchange=()=>setPref("paperpilot-autoSpeak",$("autoSpeak").checked);applyAccess();
 
 initWelcome();
+
+initSpeechControls();
