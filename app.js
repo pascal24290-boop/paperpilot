@@ -759,3 +759,71 @@ initMultiPage();
 renderMultiPageQueue();
 
 initPDFImport();
+
+
+function getShareText(){
+  const r=window.lastResult || (typeof lastResult!=="undefined"?lastResult:null);
+  if(!r) return "PaperPilot — aucun résultat disponible.";
+  const parts=[
+    "PaperPilot",
+    "",
+    "Type : "+(r.type||"Document"),
+    r.plain||"",
+    r.dates?.length ? "Dates détectées : "+r.dates.join(", ") : "",
+    r.amountsToPay?.length ? "Montants détectés : "+r.amountsToPay.join(", ") : "",
+    r.actions?.length ? "Actions : "+r.actions.join(" ; ") : "",
+    "",
+    "À vérifier avant d’agir : vérifiez les informations importantes sur le document original."
+  ];
+  return parts.filter(Boolean).join("\n");
+}
+async function sharePaperPilotResult(){
+  const text=getShareText();
+  const status=$("shareStatus");
+  try{
+    if(navigator.share){
+      await navigator.share({title:"PaperPilot — résultat",text});
+      if(status) status.textContent="Résultat partagé.";
+      return;
+    }
+    await navigator.clipboard.writeText(text);
+    if(status) status.textContent="Le partage n’est pas disponible ici : le résumé a été copié.";
+  }catch(e){
+    if(e?.name==="AbortError"){
+      if(status) status.textContent="Partage annulé.";
+      return;
+    }
+    if(status) status.textContent="Impossible de partager automatiquement. Essayez « Copier le résumé ».";
+  }
+}
+async function copyPaperPilotResult(){
+  const text=getShareText();
+  const status=$("shareStatus");
+  try{
+    await navigator.clipboard.writeText(text);
+    if(status) status.textContent="Résumé copié dans le presse-papiers.";
+  }catch(e){
+    if(status) status.textContent="La copie n’est pas disponible sur cet appareil.";
+  }
+}
+function downloadPaperPilotResult(){
+  const text=getShareText();
+  const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="PaperPilot-resume.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const status=$("shareStatus");
+  if(status) status.textContent="Résumé enregistré sur l’appareil.";
+}
+function initSharing(){
+  $("shareResult")?.addEventListener("click",sharePaperPilotResult);
+  $("copyResult")?.addEventListener("click",copyPaperPilotResult);
+  $("downloadResult")?.addEventListener("click",downloadPaperPilotResult);
+}
+
+initSharing();

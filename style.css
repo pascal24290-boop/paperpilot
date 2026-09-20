@@ -223,3 +223,7 @@ button,label{touch-action:manipulation}
 
 
 .pdfPanel{border-left:6px solid currentColor}
+
+
+.sharePanel{margin-top:1rem}
+.sharePanel .buttonGrid{display:grid;gap:.75rem}
