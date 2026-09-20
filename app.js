@@ -827,3 +827,103 @@ function initSharing(){
 }
 
 initSharing();
+
+
+const PP_REMINDER_TIMERS = new Map();
+
+function getStoredReminders(){
+  try { return JSON.parse(localStorage.getItem("paperpilot_reminders")||"[]"); }
+  catch(e){ return []; }
+}
+function setStoredReminders(list){
+  localStorage.setItem("paperpilot_reminders", JSON.stringify(list));
+}
+function notificationSupported(){
+  return "Notification" in window;
+}
+async function enablePaperPilotNotifications(){
+  const status=$("notificationStatus");
+  if(!notificationSupported()){
+    if(status) status.textContent="Les notifications ne sont pas disponibles dans ce navigateur.";
+    return false;
+  }
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission==="granted"){
+      if(status) status.textContent="Notifications autorisées sur cet appareil.";
+      scheduleAllReminderNotifications();
+      return true;
+    }
+    if(status) status.textContent="Notifications non autorisées. Vos rappels restent visibles dans « Mes rappels ».";
+  }catch(e){
+    if(status) status.textContent="Impossible d’activer les notifications ici.";
+  }
+  return false;
+}
+function fireReminderNotification(reminder){
+  if(!notificationSupported() || Notification.permission!=="granted") return;
+  const title="PaperPilot — rappel";
+  const body=reminder.text || "Vous avez un rappel PaperPilot.";
+  try{
+    new Notification(title,{body,tag:"paperpilot-"+reminder.id});
+  }catch(e){}
+}
+function scheduleReminderNotification(reminder){
+  if(!reminder || !reminder.id || !reminder.when) return;
+  const when=new Date(reminder.when).getTime();
+  const delay=when-Date.now();
+  if(delay<=0) return;
+  if(PP_REMINDER_TIMERS.has(reminder.id)) clearTimeout(PP_REMINDER_TIMERS.get(reminder.id));
+  if(delay > 2147483647) return;
+  const timer=setTimeout(()=>{
+    fireReminderNotification(reminder);
+    PP_REMINDER_TIMERS.delete(reminder.id);
+  },delay);
+  PP_REMINDER_TIMERS.set(reminder.id,timer);
+}
+function scheduleAllReminderNotifications(){
+  if(!notificationSupported() || Notification.permission!=="granted") return;
+  getStoredReminders().forEach(scheduleReminderNotification);
+}
+function addPaperPilotReminder(text, when){
+  const list=getStoredReminders();
+  const reminder={id:"r"+Date.now(),text,when,createdAt:new Date().toISOString()};
+  list.push(reminder);
+  setStoredReminders(list);
+  scheduleReminderNotification(reminder);
+  return reminder;
+}
+function deletePaperPilotReminder(id){
+  const timer=PP_REMINDER_TIMERS.get(id);
+  if(timer) clearTimeout(timer);
+  PP_REMINDER_TIMERS.delete(id);
+  setStoredReminders(getStoredReminders().filter(r=>r.id!==id));
+}
+async function testPaperPilotNotification(){
+  const status=$("notificationStatus");
+  if(!notificationSupported()){
+    if(status) status.textContent="Les notifications ne sont pas disponibles dans ce navigateur.";
+    return;
+  }
+  if(Notification.permission!=="granted"){
+    const ok=await enablePaperPilotNotifications();
+    if(!ok) return;
+  }
+  fireReminderNotification({id:"test",text:"Ceci est un test de notification PaperPilot."});
+  if(status) status.textContent="Notification de test envoyée.";
+}
+function initNotifications(){
+  $("enableNotifications")?.addEventListener("click",enablePaperPilotNotifications);
+  $("testNotification")?.addEventListener("click",testPaperPilotNotification);
+  if(notificationSupported()){
+    const status=$("notificationStatus");
+    if(status){
+      status.textContent=Notification.permission==="granted"
+        ?"Notifications déjà autorisées."
+        :"Notifications non activées.";
+    }
+    scheduleAllReminderNotifications();
+  }
+}
+
+initNotifications();

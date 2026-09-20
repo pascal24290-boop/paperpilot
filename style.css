@@ -227,3 +227,6 @@ button,label{touch-action:manipulation}
 
 .sharePanel{margin-top:1rem}
 .sharePanel .buttonGrid{display:grid;gap:.75rem}
+
+
+#notificationSettings .buttonGrid{display:grid;gap:.75rem}
