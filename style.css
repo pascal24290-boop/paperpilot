@@ -241,3 +241,12 @@ button,label{touch-action:manipulation}
 .presentationIntro h2{margin-top:0}
 .capabilitiesList{margin:.5rem 0 0;padding-left:1.25rem}
 .capabilitiesList li{margin:.45rem 0}
+
+
+.premiumPanel{border-width:2px}
+.premiumPanel .eyebrow{font-size:.8rem;letter-spacing:.14em;font-weight:800;margin:0 0 .35rem}
+.premiumPanel h2{margin-top:0}
+.premiumList{padding-left:1.25rem}
+.premiumList li{margin:.45rem 0}
+.premiumNotice{font-size:.92rem}
+.subscriptionInfo{margin-top:1rem}

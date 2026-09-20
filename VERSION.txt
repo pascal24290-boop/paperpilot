@@ -1,3 +1,4 @@
-PaperPilot V27 — version de présentation
-Plateforme : PWA, iPhone et Android
-Objectif : présentation et validation du parcours utilisateur
+PaperPilot V28 — préparation de l’offre Premium
+Tarif prévu : 4,99 € / mois
+Essai gratuit prévu : 7 jours
+Paiement réel : à intégrer via App Store / Google Play

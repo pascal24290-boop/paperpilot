@@ -949,3 +949,11 @@ function initDiagnostics(){
 }
 
 initDiagnostics();
+
+function initPremiumInfo(){
+  $("premiumInfoButton")?.addEventListener("click",()=>{
+    const el=$("premiumInfo");
+    if(el) el.textContent="7 jours gratuits, puis 4,99 € / mois. Le paiement réel sera géré par l’App Store ou Google Play lors de la publication.";
+  });
+}
+initPremiumInfo();
