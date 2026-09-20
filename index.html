@@ -16,7 +16,13 @@
   <button id="speakWelcome" class="iconBtn" aria-label="Écouter l'accueil">🔊</button>
 </header>
 
-<main>
+<main><section id="presentationIntro" class="card presentationIntro" aria-labelledby="presentationTitle">
+  <p class="eyebrow">PAPERPILOT</p>
+  <h2 id="presentationTitle">Comprendre un document, simplement.</h2>
+  <p>Photographiez, importez ou choisissez un document. PaperPilot vous aide à repérer l’essentiel : ce que c’est, ce qu’il faut faire, les montants et les dates.</p>
+  <p class="muted">Toujours vérifier les informations importantes sur le document original avant d’agir.</p>
+</section>
+
 <section id="home" class="screen active" aria-labelledby="homeTitle">
 <section id="welcomeCard" class="welcomeCard card" aria-labelledby="welcomeTitle">
   <h1 id="welcomeTitle">👋 Bienvenue dans PaperPilot</h1>
@@ -314,6 +320,20 @@
   <p>Un contrôle rapide des fonctions essentielles de cette version.</p>
   <button id="runDiagnostics" class="bigBtn">🧪 Lancer la vérification</button>
   <div id="diagnosticsResult" class="muted" aria-live="polite"></div>
+</section>
+<section id="capabilitiesPanel" class="card capabilitiesPanel" aria-labelledby="capabilitiesTitle">
+  <h2 id="capabilitiesTitle">✨ Ce que PaperPilot sait faire</h2>
+  <ul class="capabilitiesList">
+    <li>📷 Lire des photos de documents avec OCR</li>
+    <li>📄 Analyser plusieurs pages</li>
+    <li>📑 Importer des PDF contenant du texte</li>
+    <li>📅 Repérer les dates et échéances</li>
+    <li>💶 Repérer les montants et actions</li>
+    <li>💬 Répondre à des questions sur le texte détecté</li>
+    <li>🔊 Lire les résultats à voix haute</li>
+    <li>📤 Partager ou enregistrer un résumé</li>
+    <li>♿ Utiliser PaperPilot avec VoiceOver ou TalkBack</li>
+  </ul>
 </section>
 </main>
 

@@ -1,1 +1,3 @@
-PaperPilot V26 — fiabilisation et diagnostic local
+PaperPilot V27 — version de présentation
+Plateforme : PWA, iPhone et Android
+Objectif : présentation et validation du parcours utilisateur

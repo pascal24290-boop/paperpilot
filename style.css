@@ -234,3 +234,10 @@ button,label{touch-action:manipulation}
 
 #diagnosticsPanel{margin-top:1rem}
 #diagnosticsResult{margin-top:.8rem;line-height:1.6}
+
+
+.presentationIntro{border-width:2px}
+.presentationIntro .eyebrow{font-size:.8rem;letter-spacing:.14em;font-weight:800;margin:0 0 .35rem}
+.presentationIntro h2{margin-top:0}
+.capabilitiesList{margin:.5rem 0 0;padding-left:1.25rem}
+.capabilitiesList li{margin:.45rem 0}
