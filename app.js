@@ -927,3 +927,25 @@ function initNotifications(){
 }
 
 initNotifications();
+
+
+function runPaperPilotDiagnostics(){
+  const result=$("diagnosticsResult");
+  if(!result) return;
+  const checks=[];
+  checks.push(["Stockage local",typeof localStorage!=="undefined"]);
+  checks.push(["Synthèse vocale", "speechSynthesis" in window]);
+  checks.push(["Sélection de fichiers", "FileReader" in window]);
+  checks.push(["Notifications", "Notification" in window]);
+  checks.push(["Partage système", "share" in navigator]);
+  checks.push(["PDF", typeof window.pdfjsLib!=="undefined"]);
+  checks.push(["OCR", typeof window.Tesseract!=="undefined"]);
+  const ok=checks.filter(x=>x[1]).length;
+  const lines=checks.map(x=>(x[1]?"✅ ":"⚠️ ")+x[0]);
+  result.innerHTML=`<strong>${ok}/${checks.length} fonctions disponibles</strong><br>`+lines.join("<br>")+"<br><br>Les fonctions marquées ⚠️ peuvent dépendre du navigateur ou de l’appareil.";
+}
+function initDiagnostics(){
+  $("runDiagnostics")?.addEventListener("click",runPaperPilotDiagnostics);
+}
+
+initDiagnostics();

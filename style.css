@@ -230,3 +230,7 @@ button,label{touch-action:manipulation}
 
 
 #notificationSettings .buttonGrid{display:grid;gap:.75rem}
+
+
+#diagnosticsPanel{margin-top:1rem}
+#diagnosticsResult{margin-top:.8rem;line-height:1.6}
