@@ -8,6 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css?v=5">
 <title>PaperPilot V5</title>
+<script type="module">import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs"; window.pdfjsLib=pdfjsLib;</script>
 </head>
 <body>
 <header class="topbar">
@@ -61,11 +62,18 @@
     <button id="cancelPages" class="outlineBtn" disabled>✖️ Annuler</button>
   </div>
 </section>
+<section id="pdfPanel" class="card pdfPanel" aria-labelledby="pdfTitle">
+  <h2 id="pdfTitle">📑 Importer un PDF</h2>
+  <p>Choisissez un PDF enregistré sur votre iPhone ou Android. PaperPilot essaiera d’en lire les pages et d’en extraire les informations utiles.</p>
+  <button id="choosePDF" class="bigBtn">📑 Choisir un PDF</button>
+  <p id="pdfStatus" class="muted" aria-live="polite">Aucun PDF sélectionné.</p>
+</section>
 <div class="quickActions" aria-label="Actions principales">
   <button id="quickPhoto" class="bigBtn">📷 Photographier un document</button>
   <button id="quickFile" class="bigBtn">📁 Choisir un document</button>
 </div>
 <input id="multiPageInput" type="file" accept="image/*" capture="environment" hidden>
+<input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden>
 <input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
   </div>
 

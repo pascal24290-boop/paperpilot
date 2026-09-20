@@ -220,3 +220,6 @@ button,label{touch-action:manipulation}
 .multiPageActions{display:grid;gap:.7rem;margin-top:1rem}
 .pageQueue{padding-left:1.4rem}
 .pageQueue li{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:.7rem 0;border:2px solid currentColor;border-radius:12px;padding:.6rem}
+
+
+.pdfPanel{border-left:6px solid currentColor}

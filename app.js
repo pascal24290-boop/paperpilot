@@ -575,6 +575,57 @@ function renderMultiPageQueue(){
   if($("cancelPages"))$("cancelPages").disabled=!multiPageFiles.length;
 }
 function removeMultiPage(i){multiPageFiles.splice(i,1);renderMultiPageQueue();}
+
+async function analyzePDF(file){
+  if(!file) return;
+  const status=$("pdfStatus");
+  if(status) status.textContent="Analyse du PDF en cours…";
+  showScreen("loading");
+  try{
+    const text=await extractPDFText(file);
+    if(!text.trim()){
+      showScreen("home");
+      if(status) status.textContent="Ce PDF ne contient pas de texte directement lisible. Une prochaine version pourra ajouter la lecture des PDF scannés.";
+      alert("Ce PDF ne contient pas de texte lisible directement. Pour le moment, utilisez des photos des pages.");
+      return;
+    }
+    const dates=typeof detectDates==="function"?detectDates(text):[];
+    const amounts=typeof detectAmounts==="function"?detectAmounts(text):[];
+    const actions=typeof detectActions==="function"?detectActions(text):[];
+    const type=typeof detectType==="function"?detectType(text):"Document";
+    lastResult={text,type,dates,amountsToPay:amounts,actions,pageCount:null,pdf:true,plain:`PDF importé. ${dates.length?dates.length+" date(s) détectée(s). ":""}${amounts.length?amounts.length+" montant(s) détecté(s). ":""}Vérifiez toujours les informations importantes sur le document original.`};
+    $("resultTitle").textContent=type;
+    $("plainSummary").textContent=lastResult.plain;
+    if($("confidenceText")) $("confidenceText").textContent="Texte extrait directement du PDF. Vérifiez les informations importantes sur l’original.";
+    if(typeof renderVerificationList==="function") renderVerificationList(text,dates,amounts,actions);
+    if(typeof updateDeadlineCard==="function") updateDeadlineCard();
+    showScreen("result");
+  }catch(e){
+    showScreen("home");
+    if(status) status.textContent="Le PDF n’a pas pu être lu.";
+    alert("Impossible de lire ce PDF. Essayez un autre fichier ou utilisez les photos de ses pages.");
+  }
+}
+async function extractPDFText(file){
+  if(typeof pdfjsLib==="undefined") throw new Error("PDF.js indisponible");
+  const data=new Uint8Array(await file.arrayBuffer());
+  const pdf=await pdfjsLib.getDocument({data}).promise;
+  const pages=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    pages.push(`Page ${i}.\n`+content.items.map(x=>x.str||"").join(" "));
+  }
+  return pages.join("\n\n");
+}
+function initPDFImport(){
+  $("choosePDF")?.addEventListener("click",()=>$("pdfInput")?.click());
+  $("pdfInput")?.addEventListener("change",e=>{
+    const file=e.target.files?.[0];
+    e.target.value="";
+    if(file) analyzePDF(file);
+  });
+}
 function initMultiPage(){
   $("startMultiPage")?.addEventListener("click",()=>{resetMultiPage();$("multiPageInput")?.click();});
   $("addPage")?.addEventListener("click",()=>$("multiPageInput")?.click());
@@ -706,3 +757,5 @@ initSafetyControls();
 
 initMultiPage();
 renderMultiPageQueue();
+
+initPDFImport();
