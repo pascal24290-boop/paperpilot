@@ -1,3 +1,4 @@
+let multiPageFiles = [];
 const $=id=>document.getElementById(id);
 let lastResult=null,lastAnswer="";
 let lastFile = null;
@@ -562,6 +563,51 @@ function categoryLabel(cat){
     sante:"Santé",administration:"Administration",courrier:"Courrier",autre:"Autre"
   })[cat] || "Autre";
 }
+
+function resetMultiPage(){ multiPageFiles=[]; renderMultiPageQueue(); }
+function renderMultiPageQueue(){
+  const list=$("pageQueue"), status=$("multiPageStatus");
+  if(!list)return;
+  list.innerHTML=multiPageFiles.map((f,i)=>`<li><span><strong>Page ${i+1}</strong> — ${escapeHTML(f.name||"photo")}</span><button class="dangerBtn" onclick="removeMultiPage(${i})" aria-label="Supprimer la page ${i+1}">🗑️</button></li>`).join("");
+  if(status)status.textContent=multiPageFiles.length?`${multiPageFiles.length} page${multiPageFiles.length>1?"s":""} ajoutée${multiPageFiles.length>1?"s":""}.`:"Aucune page ajoutée.";
+  if($("addPage"))$("addPage").disabled=false;
+  if($("analyzePages"))$("analyzePages").disabled=!multiPageFiles.length;
+  if($("cancelPages"))$("cancelPages").disabled=!multiPageFiles.length;
+}
+function removeMultiPage(i){multiPageFiles.splice(i,1);renderMultiPageQueue();}
+function initMultiPage(){
+  $("startMultiPage")?.addEventListener("click",()=>{resetMultiPage();$("multiPageInput")?.click();});
+  $("addPage")?.addEventListener("click",()=>$("multiPageInput")?.click());
+  $("cancelPages")?.addEventListener("click",resetMultiPage);
+  $("multiPageInput")?.addEventListener("change",e=>{
+    [...(e.target.files||[])].forEach(f=>{if(f.type.startsWith("image/"))multiPageFiles.push(f);});
+    e.target.value=""; renderMultiPageQueue();
+  });
+  $("analyzePages")?.addEventListener("click",analyzeMultiPage);
+}
+async function analyzeMultiPage(){
+  if(!multiPageFiles.length||typeof Tesseract==="undefined")return;
+  showScreen("loading");
+  let combined=[],total=0,count=0;
+  try{
+    for(let i=0;i<multiPageFiles.length;i++){
+      const r=await Tesseract.recognize(multiPageFiles[i],"fra+eng");
+      combined.push(`Page ${i+1}.\n${r.data?.text||""}`);
+      if(typeof r.data?.confidence==="number"){total+=r.data.confidence;count++;}
+    }
+    const text=combined.join("\n\n");
+    const dates=typeof detectDates==="function"?detectDates(text):[];
+    const amounts=typeof detectAmounts==="function"?detectAmounts(text):[];
+    const actions=typeof detectActions==="function"?detectActions(text):[];
+    const type=typeof detectType==="function"?detectType(text):"Document";
+    lastResult={text,type,dates,amountsToPay:amounts,actions,pageCount:multiPageFiles.length,ocrConfidence:count?total/count:null,plain:`Document de ${multiPageFiles.length} pages. Vérifiez toujours les informations importantes sur l’original.`};
+    $("resultTitle").textContent=type;$("plainSummary").textContent=lastResult.plain;
+    if($("confidenceText"))$("confidenceText").textContent="Document multi-pages analysé. Vérifiez les informations importantes sur les originaux.";
+    if(typeof renderVerificationList==="function")renderVerificationList(text,dates,amounts,actions);
+    if(typeof updateDeadlineCard==="function")updateDeadlineCard();
+    showScreen("result");
+  }catch(e){showScreen("home");alert("La lecture multi-pages n’a pas pu être terminée. Essayez avec des photos plus nettes.");}
+}
 function loadSavedDocs(){
   try { return JSON.parse(localStorage.getItem("paperpilot-docs") || "[]"); }
   catch(e){ return []; }
@@ -657,3 +703,6 @@ initSpeechControls();
 initOCRQualityControls();
 
 initSafetyControls();
+
+initMultiPage();
+renderMultiPageQueue();

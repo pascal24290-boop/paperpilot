@@ -49,10 +49,23 @@
     <li>Si le résultat semble étrange, relancez la lecture.</li>
   </ul>
 </div>
+<section id="multiPagePanel" class="card multiPagePanel" aria-labelledby="multiPageTitle">
+  <h2 id="multiPageTitle">📄 Document de plusieurs pages</h2>
+  <p>Ajoutez plusieurs photos. PaperPilot les gardera dans l’ordre et pourra les lire comme un seul document.</p>
+  <button id="startMultiPage" class="bigBtn">📷 Commencer un document multi-pages</button>
+  <p id="multiPageStatus" class="muted" aria-live="polite">Aucune page ajoutée.</p>
+  <ol id="pageQueue" class="pageQueue" aria-label="Pages ajoutées"></ol>
+  <div class="multiPageActions">
+    <button id="addPage" class="bigBtn" disabled>➕ Ajouter une page</button>
+    <button id="analyzePages" class="bigBtn" disabled>🧠 Analyser le document</button>
+    <button id="cancelPages" class="outlineBtn" disabled>✖️ Annuler</button>
+  </div>
+</section>
 <div class="quickActions" aria-label="Actions principales">
   <button id="quickPhoto" class="bigBtn">📷 Photographier un document</button>
   <button id="quickFile" class="bigBtn">📁 Choisir un document</button>
 </div>
+<input id="multiPageInput" type="file" accept="image/*" capture="environment" hidden>
 <input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
   </div>
 
